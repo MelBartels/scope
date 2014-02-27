@@ -1,0 +1,3536 @@
+/*
+copyright 1990 through 2009 by Mel Bartels
+
+         This file is part of scope.exe the stepper version.
+
+         Scope.exe is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the Free Software Foundation; either version 2 of the License, or
+         (at your option) any later version.
+
+         Scope.exe is distributed in the hope that it will be useful,
+         but WITHOUT ANY WARRANTY; without even the implied warranty of
+         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+         GNU General Public License for more details.
+
+         You should have received a copy of the GNU General Public License
+         along with scope.exe; if not, write to the Free Software
+         Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+/*
+16 bit DOS large memory model compiled with Borland C++ 4.5x
+
+project options | compiler | compiler output | turn on generate comdefs
+project options | linker | general | turn off include debug information
+project options | 16-bit compiler | memory model | automatic far data
+        (large amounts of static or global data may exceed 64k dgroup [data group] limit,
+         so enable data to be loaded into far segment
+
+include bc45/lib/graphics.lib
+include egavga.obj
+include *.c
+
+tabs set at 3 char spacing
+*/
+
+
+#ifndef HEADER_H
+#define HEADER_H
+
+/* ports used:
+headkey 0x0040001AL
+tailkey 0x0040001CL
+com1 0x3F8
+com2 0x2F8
+com3 0x3E8
+com4 0x2E8
+PIC 0x20
+cmos ctrl 0x70
+cmos rtn 0x71
+tick addr 0x0040006CL
+timer 0 0x40
+timer ctrl 0x43
+pport 0x378, 0x379, 0x37A
+*/
+
+/* common typedefs, defines, strings and vars... */
+
+typedef unsigned char Byte;
+typedef unsigned char Flag;
+typedef unsigned char Boolean;
+typedef signed char SignedByte;
+
+#define False ((Byte) 0)
+#define True ((Byte) 1)
+#define None ((Byte) 0)
+#define High ((Byte) 1)
+#define Low ((Byte) 0)
+#define ByteLogicalHigh ((Byte) 255)
+#define ByteLogicalLow ((Byte) 0)
+#define PortOn ((Byte) 255)
+#define PortOff ((Byte) 0)
+#define Yes ((Byte) 1)
+#define No ((Byte) 0)
+#define On ((Byte) 1)
+#define Off ((Byte) 0)
+#define Plus ((Byte) 1)
+#define Minus ((Byte) 0)
+#define Positive ((Byte) 1)
+#define Negative ((Byte) 0)
+#define CW ((Byte) 2)
+#define CCW ((Byte) 1)
+#define NoRotation ((Byte) 0)
+
+/* screen window border defines... */
+
+/* single line */
+#define HorizBorder       196
+#define VertBorder        179
+#define TopLeftCorner     218
+#define TopRightCorner    191
+#define BottomLeftCorner  192
+#define BottomRightCorner 217
+#define LeftIntersect     195
+#define RightIntersect    180
+
+#define DblHorizBorder       205
+#define DblVertBorder        186
+#define DblTopLeftCorner     201
+#define DblTopRightCorner    187
+#define DblBottomLeftCorner  200
+#define DblBottomRightCorner 188
+#define DblLeftIntersect     199
+#define DblRightIntersect    182
+
+/* keyboard defines... */
+
+#define Backspace 8
+#define Tab 9
+#define LF 10
+#define VTab 11
+#define Return 13
+#define Esc 27
+#define Blank 32
+#define DEL 127
+#define Dash 45
+#define NewLineChar '\n'
+#define EndOfStr '\0'
+
+/* extended keyboard defines... */
+
+#define ExtendedKeyboardStroke 0
+
+#define UpCursor    72
+#define DownCursor  80
+#define LeftCursor  75
+#define RightCursor 77
+#define Shift_Tab   15
+/* the left aprostrophe as found in upper left corner of most keyboards */
+#define Left_Apostrophe 96
+#define EqualsKey 61
+#define PlusKey 43
+#define MinusKey 45
+
+#define F1  59
+#define F2  60
+#define F3  61
+#define F4  62
+#define F5  63
+#define F6  64
+#define F7  65
+#define F8  66
+#define F9  67
+#define F10 68
+#define F11 133
+#define F12 134
+
+#define Shift_F1  84
+#define Shift_F2  85
+#define Shift_F3  86
+#define Shift_F4  87
+#define Shift_F5  88
+#define Shift_F6  89
+#define Shift_F7  90
+#define Shift_F8  91
+#define Shift_F9  92
+#define Shift_F10 93
+
+#define Ctrl_F1  94
+#define Ctrl_F2  95
+#define Ctrl_F3  96
+#define Ctrl_F4  97
+#define Ctrl_F5  98
+#define Ctrl_F6  99
+#define Ctrl_F7  100
+#define Ctrl_F8  101
+#define Ctrl_F9  102
+#define Ctrl_F10 103
+
+#define Alt_F1  104
+#define Alt_F2  105
+#define Alt_F3  106
+#define Alt_F4  107
+#define Alt_F5  108
+#define Alt_F6  109
+#define Alt_F7  110
+#define Alt_F8  111
+#define Alt_F9  112
+#define Alt_F10 113
+
+#define HeadKeysMemoryLocation 0x0040001AL
+#define TailKeysMemoryLocation 0x0040001CL
+#define KeyStroke (*headkeys != *tailkeys)
+
+/* pointers to memory areas holding start, end of keystrokes */
+int far *headkeys;
+int far *tailkeys;
+
+Byte LargeNum[10];
+
+/* common message define... */
+
+#define ContMsg "Press any key to continue..."
+
+/* common conversion variables... */
+
+double OneRev;
+double HalfRev;
+double QtrRev;
+double RadToDeg;
+double DegToRad;
+double RadToArcmin;
+double ArcminToRad;
+double RadToArcsec;
+double ArcsecToRad;
+double RadToTenthsArcsec;
+double TenthsArcsecToRad;
+double RadToHr;
+double HrToRad;
+double RadToMin;
+double MinToRad;
+double RadToSec;
+double SecToRad;
+double RadToHundSec;
+double HundSecToRad;
+double RadToMilliSec;
+double MilliSecToRad;
+double DaysToHr;
+double DaysToMin;
+double DaysToSec;
+double ArcsecPerRev;
+double RevPerArcsec;
+double ArcsecPerDeg;
+double DegPerArcsec;
+double SidRate;
+
+double ClockTicksDay;
+double HalfClockTicksDay;
+double ClockTicksSec;
+double ClockTicksMin;
+double ClockTicksHr;
+double RadToClockTick;
+double ClockTickToRad;
+
+void GetResponseWithLX200Check( void);
+void ContMsgRoutine( void);
+void BadMsgExit( const char* Msg);
+void InitCommonVars( void);
+
+/* keyboard response or input */
+int Response;
+
+#define NameSize  40
+#define ValueSize 40
+#define ObjectNameSize 24
+
+#define NewLine printf(" \n")
+#define NameBlanks "                       "
+#define EmptyString ""
+
+#define MaxCharsFlag 1
+#define MaxCharsInt 4
+#define MaxCharsLong 8
+#define MaxCharsDbl 9
+
+struct ffblk Ffblk;
+Flag FindFirst;
+Flag FoundFile;
+
+char Name[NameSize];
+char Value[ValueSize];
+
+typedef enum
+{
+        UserEscaped,
+        UserDidNotEnterNumber,
+        UserEnteredNumber
+}NUM_RESPONSE;
+
+NUM_RESPONSE Num_Response;
+
+void BoundsOneRev( double* V);
+void BoundsHalfRev( double* V);
+void BoundsSinCos( double* V);
+double ValidRad( double Rad);
+double ValidRadPi( double Rad);
+void DisplayNegSign( const int startx, const int starty, const int xsize, const int ysize,
+const int attr);
+void DisplayColon( const int startx, const int starty, const int xsize, const int ysize,
+const int attr);
+void DisplayLargeNum( const int num, const int startx, const int starty, const int xsize,
+const int ysize, const int attr);
+void TestDisplayLargeNum( void);
+void GetCurDir( char* Dir);
+Flag Gets( char Str[], const int NumChars);
+Flag GetNumStr( char NumStr[], const int NumChars);
+Flag GetFlag( Flag* Num);
+Flag GetInt( int* Num);
+Flag GetLong( long* Num);
+Flag GetDouble( double* Num);
+
+FILE* Input;
+FILE* Output;
+
+void FReadDouble( FILE* File, double* V);
+void FReadFlag( FILE* File, Flag* V);
+void FReadByte( FILE* File, Byte* V);
+void FReadInt( FILE* File, int* V);
+void FReadUnsigned( FILE* File, unsigned* V);
+void FReadLong( FILE* File, long* V);
+void FReadChar( FILE* File, char* V);
+void FReadToNewLine( FILE* File);
+void FReadToChar( FILE* File, const char V);
+Flag FReadStringToCharCountOrNewLine( FILE* File, char* Name, const int CharCount);
+void FReadStringToCharCountAndNewLine( FILE* File, char* Name, const int CharCount);
+Flag IsWhiteSpace( const char C);
+void ReadInputParseString( FILE* Input);
+void ParseString( void);
+void TestReadInputParseString( FILE* Input);
+int FindNextIncrFilename( char* NameStart, char* Extension);
+
+struct AZByte
+{
+        Byte A, Z;
+};
+struct AZFlag
+{
+        Flag A, Z;
+};
+struct AZInt
+{
+        int A, Z;
+};
+struct AZUnsigned
+{
+        unsigned A, Z;
+};
+struct AZLong
+{
+        long A, Z;
+};
+struct AZLongV
+{
+        volatile long A;
+        volatile long Z;
+};
+struct AZDouble
+{
+        double A, Z;
+};
+
+struct HMSH
+{
+        int Sign;
+        int Hr;
+        int Min;
+        int Sec;
+        int HundSec;
+};
+
+struct DMS
+{
+        far int Sign;
+        far int Deg;
+        far int Min;
+        far int Sec;
+};
+
+/* Ra, Dec, Alt, Az, SidT kept in radians */
+struct Position
+{
+        double Year;
+        struct AZDouble Precession;
+        struct AZDouble Nutation;
+        struct AZDouble AnnualAberration;
+        double Ra;
+        struct HMSH RaHMSH;
+        double Dec;
+        struct DMS DecDMS;
+        double HA;
+        struct HMSH HAHMSH;
+        double Alt;
+        double Az;
+        double Ax3;
+        double SidT;
+        struct HMSH SidTimeHMSH;
+        Flag Init;
+};
+
+/* linked list of Positions */
+struct LINK_POSITION
+{
+        struct Position P;
+        struct AZDouble AZErr;
+        double InvAngSepSqr;
+        struct AZDouble AZWeightedErr;
+        struct LINK_POSITION* PrevLinkPos;
+        struct LINK_POSITION* NextLinkPos;
+};
+
+struct LINK_POSITION* FirstLinkPos;
+struct LINK_POSITION* LastLinkPos;
+struct LINK_POSITION* CurrentLinkPos;
+
+int LinkPosCount;
+
+void AddLinkPos( struct LINK_POSITION* LinkPos);
+void FreeAllLinkPos( void);
+struct LINK_POSITION* InitLinkPos( void);
+void SortLinkPos (char* Key);
+void DisplayLinkPos( void);
+
+struct LINK_PMC
+{
+        struct AZDouble AZ;
+        struct AZDouble AZErr;
+        struct LINK_PMC* PrevLinkPMC;
+		  struct LINK_PMC* NextLinkPMC;
+};
+
+struct LINK_PMC* FirstLinkPMC;
+struct LINK_PMC* LastLinkPMC;
+struct LINK_PMC* CurrentLinkPMC;
+
+int LinkPMCCount;
+
+void AddLinkPMC( struct LINK_PMC* LinkPMC);
+void FreeAllLinkPMC( void);
+struct LINK_PMC* InitLinkPMC( void);
+
+#define FilenameSize 13
+
+typedef enum
+{
+        NameIsADirectory,
+        NameIsAFile
+}FNAME_TYPE;
+
+struct LINK_FNAME
+{
+        char Name[FilenameSize];
+        FNAME_TYPE FNameType;
+        struct LINK_FNAME* PrevLinkFname;
+        struct LINK_FNAME* NextLinkFname;
+};
+
+struct LINK_FNAME* FirstLinkFname;
+struct LINK_FNAME* CurrentLinkFname;
+struct LINK_FNAME* LastLinkFname;
+
+void AddLinkFname( struct LINK_FNAME* LinkFname);
+void FreeAllLinkFname( void);
+struct LINK_FNAME* InitLinkFname( void);
+void SortLinkFname( void);
+void DisplayLinkFnames( void);
+void LoadFnames( char* Name);
+
+typedef enum
+{
+        absolute_altaz,
+        offset_altaz,
+        absolute_equat,
+        offset_equat,
+        drift_equat,
+        drift_altaz,
+        init1,
+        init2,
+        init3,
+        init1usinginput,
+        init2usinginput,
+        init3usinginput,
+        file1,
+        file2,
+		  file3,
+        trackon,
+        trackoff,
+        auto_scroll_alert_off,
+        analyze,
+        alt_offset,
+        auto_scroll,
+        auto_scroll_off,
+        move_zero_pec,
+        save1,
+        save2,
+        restore1,
+        restore2,
+        msarcsecsec,
+   handpad_mode,
+        halfstep,
+        new_equat,
+        new_altaz,
+        set_equat,
+        set_altaz,
+        reset_equat,
+        reset_altaz,
+        reset_home,
+        data_file,
+        move_file,
+   move_equat,
+        prompt,
+        no_type
+}SCROLL_TYPE;
+
+struct SCROLL
+{
+        SCROLL_TYPE ScrollType;
+        struct Position* P;
+        struct AZLong* L;
+        int i1;
+        double Sec;
+        char Note[NameSize];
+        struct SCROLL* PrevScroll;
+        struct SCROLL* NextScroll;
+};
+
+struct SCROLL* FirstScroll;
+struct SCROLL* LastScroll;
+struct SCROLL* CurrentScroll;
+struct SCROLL* PrevScroll;
+struct SCROLL* NextScroll;
+
+int TotalScrollCount;
+int CurrentScrollCount;
+
+#define MaxStrIx 132
+#define MaxStr 25
+struct PARSED_STRING
+{
+        char Str[MaxStrIx];
+		  int BegIx[MaxStr];
+        int CntBegIx;
+        Flag PrevWhiteSpaceFlag;
+        Flag WhiteSpaceFlag;
+        int ReadStrCnt;
+};
+
+struct PARSED_STRING ParsedString;
+
+void AddScroll( struct SCROLL* Scr);
+void FreeAllScroll( void);
+struct SCROLL* InitScroll( Flag InitPosition, Flag InitLong);
+struct Position* InitScrollPosition( void);
+struct AZLong* InitScrollLong( void);
+
+struct RA_DEC_INIT
+{
+        double Ra;
+        double Dec;
+        struct RA_DEC_INIT* PrevRaDecInit;
+        struct RA_DEC_INIT* NextRaDecInit;
+};
+
+struct RA_DEC_INIT* RaDecInit;
+struct RA_DEC_INIT* FirstRaDecInit;
+struct RA_DEC_INIT* LastRaDecInit;
+
+void AddRaDecInit( struct RA_DEC_INIT* RaDecInit);
+void FreeAllRaDecInit( void);
+struct RA_DEC_INIT* InitRaDecInit( void);
+
+/* serial port... */
+
+typedef enum
+{
+        Com1,
+        Com2,
+        Com3,
+        Com4
+}COM_ID;
+
+COM_ID ComID;
+
+struct COMMPORT
+{
+        unsigned Base;
+        int IRQ;
+};
+
+#define MaxCommPorts 4
+
+struct COMMPORT CommPort[MaxCommPorts];
+
+#define IER 1           /* interrupt enable register */
+#define IIR 2     /* interrupt identication register, also the write fifo control register (16550 or better) */
+#define LCR 3           /* line control register */
+#define MCR 4           /* modem control register */
+#define LSR 5           /* line status register */
+#define MSR 6           /* modem status register */
+#define MCR_DTR 1 /* bit to turn on DTR (data terminal ready) */
+#define MCR_RTS 2 /* bit to turn on RTS (request to send) */
+
+/* IER defines */
+#define INT_ON_RCV 0x01
+#define INT_ON_XMT 0x02
+
+/* IIR defines */
+#define INT_PENDING 0x01
+#define XMT_INT 0x02
+#define RCV_INT 0x04
+
+/* LCR defines */
+#define DLAB 0x08 /*data latch access bit */
+
+/* LSR defines */
+#define DATA_READY 0x01
+#define XMT_READY 0x20
+#define XMT_COMPLETE 0x40
+
+/* bits 3-7 of interrupt mask register (8259 PIC) indicate vector address of IRQ:
+		  IRQ0 0x08
+		  IRQ1 0x09
+		  IRQ2 0x0A
+		  IRQ3 0x0B
+		  IRQ4 0x0C
+        IRQ5 0x0D
+        IRQ6 0x0E
+        IRQ7 0x0F
+        IRQ8 0x70
+        IRQ9 0x71
+        IRQ10 0x72
+        IRQ11 0x73
+        IRQ12 0x74
+        IRQ13 0x75
+        IRQ14 0x76
+        IRQ15 0x77
+
+if appropriate bit is zero, then service that interrupt (if 1 then 'turn off' that interrupt)
+interrupt 0 0x01
+interrupt 1 0x02
+interrupt 2 0x04
+interrupt 3 0x08
+interrupt 4 0x10
+interrupt 5 0x20
+interrupt 6 0x40
+interrupt 7 0x80
+
+interrupt 8 0x01
+interrupt 9 0x02
+interrupt 10 0x04
+interrupt 11 0x08
+interrupt 12 0x10
+interrupt 13 0x20
+interrupt 14 0x40
+interrupt 15 0x80
+
+IRQ8-15 are tied to slave PIC which is attached to IRQ2 on master (IRQ2 is diverted to IR9);
+turn on IRQ2 on master at 0x21, otherwise IR8-15 won't function;
+mask for IRQ8-15 on slave at 0xA1 per table above, being sure to send a turn off EOI to both slave
+and master (outportb( 0xA0, 0x20) and outportb( 0x20, 0x20)) at end of user coded interrupt service
+routine;
+see http://www.beyondlogic.org/interrupts/interupt.htm */
+
+struct IRQ
+{
+        Byte Vector;
+        Byte IRQMask;
+};
+
+struct IRQ IRQTable[16];
+
+/* 8259 PIC (programmable interrupt controller):
+        ICW == initialization command word
+        master at 0x20, slave at 0xA0 */
+
+#define IntMaskReg 0x21
+#define IntMaskRegSlave 0xA1
+#define PIC_EOI_ADDR 0x20
+#define PIC_EOI_ADDR_SLAVE 0xA0
+#define EOI 0x20
+
+#define NoneParity 0
+#define OddParity 8
+#define EvenParity 24
+#define MarkParity 40
+#define SpaceParity 56
+
+#define LF 10
+#define SI 15
+#define SY 22
+#define D2 18
+
+/* for buffers to work, SerBufEnd must be 2^n - 1 */
+#define SerBufEnd 255
+
+/* buffer index goes from 0 to SerBufEnd, so array size is SerBufEnd+1 */
+/* write buffers */
+volatile Byte SerBufWrite[MaxCommPorts][SerBufEnd+1];
+volatile unsigned SerBufWriteBegIx[MaxCommPorts];
+volatile unsigned SerBufWriteEndIx[MaxCommPorts];
+volatile unsigned int SerWriteCount[MaxCommPorts];
+
+/* read buffers */
+volatile Byte SerBufRead[MaxCommPorts][SerBufEnd+1];
+volatile unsigned SerBufReadBegIx[MaxCommPorts];
+volatile unsigned SerBufReadEndIx[MaxCommPorts];
+volatile unsigned int SerReadCount[MaxCommPorts];
+
+unsigned SerialBase;
+Byte Parity;
+Byte DataBits;
+Byte StopBits;
+
+void interrupt( *OldSer1IntVec)();
+void interrupt( *OldSer2IntVec)();
+void interrupt( *OldSer3IntVec)();
+void interrupt( *OldSer4IntVec)();
+void interrupt Ser1ISR( void);
+void interrupt Ser2ISR( void);
+void interrupt Ser3ISR( void);
+void interrupt Ser4ISR( void);
+Flag InitSerial( const int ComPort, const long BaudRate, const int Parity, const int DataBits,
+const int StopBits);
+Flag CloseSerial( const int ComPort);
+void InitRingBuffers( const int ComPort);
+Flag ReadSerial( const int ComPort, Byte* B);
+Flag WaitForReadBytes( const int ComPort, const int numBytesToWaitFor, const int BailIntervalMilliSec);
+void WriteSerial( const int ComPort, const Byte B);
+void WriteSerialString( const int ComPort, char C[], const int CharCount);
+void WriteSerialPauseUntilXmtFinished( const int ComPort, const Byte B);
+void WriteSerialStringPauseUntilXmtFinished( const int ComPort, char C[], const int CharCount);
+Flag WriteSerialFinished( const int ComPort);
+void DisplaySerialString( char C[], const int CharCount);
+void TestSerial( const int ComPort);
+
+/* video... */
+
+/* as in 'text' element, analagous to 'pixel' = picture element */
+struct Texel
+{
+        char Ch;
+        unsigned char Attr;
+};
+
+/* Using this structure we can define a two - dimensional array to correspond to the memory
+arrangement of the screen where X is across or columns and Y is up and down or rows (X, Y are
+backwards from the x, y in goto( x, y)) */
+
+#define MaxY 25
+#define MaxX 80
+
+/* ScreenArea is type defined as a two dimensional array of 'Texel's */
+typedef struct Texel ScreenArea[MaxY][MaxX];
+
+#define Screen (*ScreenPtr)
+
+struct XY
+{
+        int X, Y;
+};
+
+char StrBuf[MaxX];
+char StrBuf2[MaxX];
+
+/* X = across or columns, and Y = up and down or rows */
+struct XY VidMemXY;
+int TextAttr;
+unsigned MemSeg, MemOff;
+ScreenArea far* ScreenPtr;
+union REGS Regs;
+struct text_info ti;
+void( *WriteCharToScreen_f_ptr) ( const char Char);
+void( *WriteStrBufToScreen_f_ptr) (void);
+void InitVideo( const Flag DisplayOpeningMsgs);
+void NULL_FUNCTION( void);
+void WriteCharToScreen( const char Char);
+void WriteStrBufToScreen( void);
+void Clrscr( void);
+void TestVideo( void);
+
+/* CMOS clock... */
+
+/* To read a byte from CMOS, do an OUT 70H,addr; followed by IN 71H.
+To write a byte to CMOS,  do an OUT 70H,addr; followed by OUT 71H,value. */
+
+#define CMOS_Ctrl_Port 0x70
+#define CMOS_Rtn_Port  0x71
+
+#define CCP      CMOS_Ctrl_Port
+#define CMOS_RTN inport( CMOS_Rtn_Port)
+/* BCD = binary coded decimal; if 0xAB, then 'A' is tens and 'B' is ones in
+binary */
+#define DECODE_BCD (int) (((BCD & 0xF0)>>4)*10 + (BCD & 0x0F))
+#define ENCODE_BCD (int) (((BCD/10)<<4) + BCD - (BCD/10)*10)
+
+#define CMOS_Reg_BCD_Sec   0
+#define CMOS_Reg_BCD_Min   2
+#define CMOS_Reg_BCD_Hr    4
+#define CMOS_Reg_BCD_Day   7
+#define CMOS_Reg_BCD_Mon   8
+#define CMOS_Reg_BCD_Yr    9
+#define CMOS_Reg_Status_A 10
+#define CMOS_Reg_Status_B 11
+#define CMOS_Reg_Status_C 12
+#define CMOS_Reg_Status_D 13
+
+#define Update_In_Progress 128
+
+#define TimeOfDayInterrupt 0x1A
+
+struct time t;
+struct date d;
+
+/* vars for CMOS clock... */
+
+int DOS_Yr;
+int DOS_Mon;
+int DOS_Day;
+int DOS_Hr;
+int DOS_Min;
+int DOS_Sec;
+
+int CMOS_Status_A;
+int BCD;
+int Hold_BCD;
+int CMOS_Sec;
+int CMOS_Min;
+int CMOS_Hr;
+int CMOS_Day;
+int CMOS_Mon;
+int CMOS_Yr;
+int Century;
+
+/* access to CMOS Real Time Clock (RTC): 0 for direct port access, 1 for bios interrupt call access
+- use 1 only if machine locks up on direct port call */
+Flag CMOS_RTC_Access;
+
+void( *SetDOSToCMOS_RTC_f_ptr) (void);
+
+int UpdateInProgress( void);
+void DisplayCMOSTimeDate( void);
+void SetDOSToCMOS_RTC_ViaPort( void);
+void SetDOSToCMOS_RTC_ViaBios( void);
+void SetDOSToCMOS_Vars( void);
+void SetRealTimeClock( const int hr, const int min, const int sec);
+void SetDateofRealTimeClock( const int century, const int year, const int mon, const int day);
+Flag ReadRealTimeClock( int* hr, int* min, int* sec, int* daylight);
+Flag ReadDateofRealTimeClock( int* century, int* year, int* mon, int* day);
+
+/* astronomical times... */
+
+#define ETZ 5
+#define TICK_ADDR 0x0040006CL
+
+/* pointer to bios memory area holding bios clock tick count */
+long far* Ticks;
+long StartTicks;
+int Days;
+double JD;
+double SidHr;
+double SidT;
+double StartSidT;
+
+struct HMSH SidTimeHMSH;
+
+/* current coordinates */
+/* define here bec. of NewSidT(); */
+struct Position Current;
+
+void InitTimes(  const Flag DisplayOpeningMsgs, const double Tz, const int DST, double LongitudeDeg);
+
+void SetStartBiosClockAndSidTime( const long Yr, const int M, const int D, const int h, const int m,
+const double s, const double Tz, const int DST,
+double LongitudeDeg);
+
+int NewSidT( void);
+void WaitForNewSidT( void);
+double calcJDFromYear(const double year);
+void CalcJD( const long Y, const int M, const int D, const double Tz, const int DST, const int h,
+const int m, const double s);
+
+void CalcSidHr( const long Y, const int M, const int D, const double Tz, const int DST, const int h,
+const int m, const double s, const double LongitudeDeg);
+
+void GetHMSH( long TotalHundSec, struct HMSH* V);
+void DisplayHMSH( const struct HMSH V);
+void StrBufHMSH( const struct HMSH V);
+void DisplayHMST( const struct HMSH V);
+void DisplayHMS( const struct HMSH V);
+void StrBufHMS( const struct HMSH V);
+void DisplaySHMS( const struct HMSH V);
+void StrBufSHMS( const struct HMSH V);
+void DisplaySHMSH( const struct HMSH V);
+void StrBufSHMSH( const struct HMSH V);
+void CalcRadFromHMSH( double* R, struct HMSH V);
+void CalcRadFromDMS( double* R, struct DMS V);
+
+void TestTimes( void);
+
+/* coordinates... */
+
+#define SizeofHMSX 8
+#define SizeofDMSX 9
+#define SizeofDegX 7
+
+void ValidRa( struct Position* Pos);
+void ValidHA( struct Position* Pos);
+void ValidAz( struct Position* Pos);
+
+void SetCoordDeg( struct Position* Pos, const double RaDeg, const double DecDeg,
+const double AltDeg, const double AzDeg, const double SidTDeg);
+
+void ShowCoord( struct Position* Pos);
+void FShowCoord( FILE* Output, char* Name, struct Position* Pos);
+void GetDMS( long TotalSec, struct DMS* V);
+void DisplayDMS( const struct DMS D);
+void StrBufDMS( const struct DMS D);
+void VidMemDeg( const double Deg);
+void VidMemRaHMS( struct Position* Pos);
+void VidMemRaHMSH( struct Position* Pos);
+void VidMemRaSHMS( struct Position* Pos);
+void VidMemHAHMS( struct Position* Pos);
+void VidMemHAHMSH( struct Position* Pos);
+void VidMemDecDMS( struct Position* Pos);
+void VidMemSidT( struct Position* Pos);
+
+/* parallel port... */
+
+#define PPortPin1 1
+#define PPortPin14 2
+#define PPortPin16 4
+#define PPortPin17 8
+#define PPortPins1_14 3
+#define PPortPins16_17 12
+#define PPortPins1_14_16 7
+
+unsigned PPortAddr;
+unsigned PPortAddrOutByte;
+unsigned PPortAddrInNibble;
+unsigned PPortAddrInOutNibble;
+Byte OutValue;
+Byte InNibbleValue;
+Byte BiDirOutNibbleValue;
+Byte BiDirInNibbleValue;
+
+void InitPPort( void);
+void ClosePPort( void);
+unsigned GetPPortAddr( int lpt);
+void DisplayLpts (void);
+void OutByte( void);
+void BiDirOutNibble( void);
+Byte InNibble4Bit( void);
+Byte InNibble5Bit( void);
+Byte BiDirInNibble( void);
+void TestPPort( void);
+
+/* refraction... */
+
+#define MaxRefractIx 12
+
+double R[MaxRefractIx+1][2];
+double Refract;
+
+void InitRefract( void);
+void CalcRefractScopeToSky( const double Alt);
+void CalcRefractSkyToScope( const double Alt);
+void TestRefract( void);
+
+/* egavga routines */
+
+int color;
+int maxx, maxy;
+
+/* to save screen window */
+char WinBuffer[MaxX*MaxY*2];
+
+void InitGraphics( void);
+void CloseGraphics( void);
+
+/* mouse functions */
+
+#define MOUSE_INTERRUPT 0x33
+
+#define RESET_MOUSE 0
+#define DISPLAY_MOUSE 1
+#define HIDE_MOUSE 2
+#define GET_MOUSE_POSITION 3
+#define GET_MOUSE_POSITION_RELATIVE 0x0B
+#define SET_MOUSE_POSITION 4
+#define GET_MOUSE_PRESS_INFO 5
+#define GET_MOUSE_RELEASE_INFO 6
+#define SET_MOUSE_SENSITIVITY 0x1A
+#define GET_MOUSE_SENSITIVITY 0x1B
+
+#define SUCCESSFULL_MOUSE_RESET -1
+
+#define LEFT_BUTTON 0
+#define RIGHT_BUTTON 1
+
+#define MaxXText 80
+#define MaxYText 25
+#define XYTextRatio (MaxXText/MaxYText)
+#define MouseMaxXText (MaxXText-1)
+#define MouseMaxYText (MaxYText-1)
+/* max MouseXGraph = 640 (8*80 chars), max MouseYGraph = 200 (8*25 chars) */
+#define MaxMouseXGraph (8*MaxXText)
+#define MaxMouseYGraph (8*MaxYText)
+#define MidMouseXGraph (MaxMouseXGraph/2)
+#define MidMouseYGraph (MaxMouseYGraph/2)
+
+int inax;
+int inbx;
+int incx;
+int indx;
+int outax;
+int outbx;
+int outcx;
+int outdx;
+int HorizMickeySensitivity;
+int VertMickeySensitivity;
+int ThresholdDblSpeed;
+int MouseXGraph;
+int MouseYGraph;
+int MouseXMickeyRelative;
+int MouseYMickeyRelative;
+int MouseXText;
+int MouseYText;
+
+int MouseLeftClickCount;
+int MouseRightClickCount;
+Flag MouseLeftButtonDown;
+Flag MouseRightButtonDown;
+
+void InitMouse( void);
+void CallMouse( void);
+void GetDefaultMouseSensitivity( void);
+/* this function decodes cx and dx into horiz and vert positions; call CallMouse() first */
+void DecodeMousePosition( void);
+void ResetMouse( void);
+void LowMouseSensitivity( void);
+void ResetMouseSensitivity( void);
+void DisplayMouse( void);
+void HideMouse( void);
+void GetMousePosition( void);
+void GetMousePositionRelative( void);
+/* mouse stays hidden if HideMouse() called previously */
+void SetMousePosition(int Horiz, int Vert);
+void CenterMouseCursor( void);
+int MouseLeftButtonPressCount( void);
+int MouseRightButtonPressCount( void);
+int MouseLeftButtonReleaseCount( void);
+int MouseRightButtonReleaseCount( void);
+void TestMouse( void);
+
+/* config... */
+
+#define DefaultConfigFile "CONFIG.DAT"
+#define MaxMs 40
+
+#define NoEncodersStr "NoEncoders"
+#define EncoderBSegStr "Bseg"
+#define EncoderResetViaRStr "ResetViaR"
+#define EncoderResetViaZStr "ResetViaZ"
+#define EncoderNoResetStr "NoReset"
+#define EncoderMouseStr "Mouse"
+#define EncoderEkStr "Ek"
+#define EncoderSkyCommanderStr "SkyCommander"
+#define EncoderSkyCommanderRStr "SkyCommanderR"
+
+#define MAX_EYEPIECES 12
+
+/* configuration vars... */
+
+typedef enum
+{
+        StandardHandpad,
+        DirectionOnlyHandpad
+}HANDPAD_DESIGN;
+
+typedef enum
+{
+        FocusMethod_OnOff_16_17,
+        FocusMethod_OnOff_16_17_Slow1_14,
+        FocusMethod_Pulse_1_14,
+        FocusMethod_Pulse_16_17
+}FOCUS_METHOD;
+
+typedef enum
+{
+        MotorControl_PWM_PCB = 0,
+        MotorControl_PulseDir = 2,
+}MOTOR_CONTROL_METHOD;
+
+struct EYEPIECE
+{
+        int Position;
+        char Name[NameSize];
+};
+
+char ConfigFile[NameSize];
+
+int DefaultBackground;
+int DefaultColor;
+int TitleColor;
+int BorderColor;
+int MenuColor;
+int DisplayColor;
+int SelectColor;
+int CurrentColor;
+int SelectBackground;
+
+/* if 1, then confirm 'quit' */
+Flag ConfirmQuit;
+/* if 1, display opening messages */
+Flag DisplayOpeningMsgs;
+/* if 1, warn if selected object below horizon */
+Flag HorizonLimitFlag;
+/* move of this distance or greater triggers confirmation msg */
+double MoveHsMsgDeg;
+/* user defined hotkeys */
+int HotkeyF9;
+int HotkeyF10;
+int HotkeyF11;
+int HotkeyF12;
+/* if value found in config file, then set flag to true; save value to config file only if flag is true */
+Flag HotkeyF9Set;
+Flag HotkeyF10Set;
+Flag HotkeyF11Set;
+Flag HotkeyF12Set;
+/* location where SlewFile and SlewOutFile are located */
+char* InterfacePath;
+/* if desiring to use mount for menu, scope control functions */
+Flag UseMouseFlag;
+/* 1 = use IACA */
+Flag IACA_Flag;
+Flag WriteInitHistoryFlag;
+Flag GEMFlipPossible;
+Flag AutoGEMFlip;
+Flag SafetyZoneFlag;
+double AutoGEMFlipOnFuzzDeg;
+double AutoGEMFlipOffFuzzDeg;
+double SafetyZoneOnHigh;
+double SafetyZoneOnLow;
+double SafetyZoneOffHigh;
+double SafetyZoneOffLow;
+Flag Siderostat;
+Flag Equatorial;
+double HomeAltDeg;
+double HomeAzDeg;
+int MsArcsecSec;
+/* if 1, correct for precession, nutation, and annual aberration */
+Flag precessionNutationAberration;
+/* if 0, refraction display only; if 1, calculate altazimuth refraction; if 2, calculate equatorial refraction */
+int RefractFlag;
+Flag UseAltAzECFlag;
+Flag UseAltAltECFlag;
+Flag UseAzAzECFlag;
+/* pointing model compensation in use */
+Flag PointingModelFlag;
+/* if handpad present, then set to 1 */
+Flag HandpadPresentFlag;
+int StartingHandpadMode;
+/* standard design, or, direction input spread across the 4 input lines */
+int HandpadDesign;
+/* up, down buttons reversed */
+Flag UpDownButtonsReversedFlag;
+/* flip handpad's up/down buttons if GEM flipped since declination direction inverted when GEM flipped */
+Flag HandpadFlipUpDownWithGEMFlip;
+double AltBacklashArcmin;
+double AzBacklashArcmin;
+/* if non-zero, then parallel port 17 is used to signal A motor backlash direction: high when
+backlash direction is CCW, low when direction is CW (starting value); used for motorized sliding
+counterweights */
+Flag ABacklashSignalPPortPin17;
+/* move beyond this limits not allowed while slewing using interrupt timer */
+/* to disable, set both limits to zero */
+double AltLowLimitDeg;
+double AltHighLimitDeg;
+/* to disable, set both limits to zero */
+double AzLowLimitDeg;
+double AzHighLimitDeg;
+/* guiding speed */
+int GuideArcsecSec;
+/* drift to drag a guide star so that an autoguider can  update in one direction only */
+double GuideDragAltArcsecPerMin;
+double GuideDragAzArcsecPerMin;
+double GuideDragRaArcsecPerMin;
+double GuideDragDecArcsecPerMin;
+/* if True, drift updated at end of handpaddle guiding session */
+Flag HPUpdateDriftFlag;
+/* starting drift values */
+double DriftAltArcsecPerMin;
+double DriftAzArcsecPerMin;
+double DriftRaDegPerHr;
+double DriftDecDegPerHr;
+/* use PEC */
+Flag PECFlag;
+/* parallel port pin(s) to use for altitude auto-synchronization */
+long AutoAltPECPin;
+/* set to 1 if using automatic synchronization of alt PEC alignment via parallel port input
+triggered by a microswitch */
+Flag AutoAltPECSyncOnFlag;
+/* if 1, detect low-high transition, if 0, detect high-low transition */
+Flag AutoAltPECSyncLowHighFlag;
+/* direction that alt PEC must be moving in order to trigger auto-sync:
+;0 = either direction, 1 = CCW direction, 2 = CW direction */
+Flag AutoAltPECSyncDirFlag;
+/* debounce the sync signal in software */
+Flag AutoAltPECDeBounce;
+/* set to 1 if using automatic synchronization of az PEC alignment via parallel port input triggered
+by a microswitch */
+/* parallel port pins to use for azimuth auto-synchronization */
+long AutoAzPECPin;
+Flag AutoAzPECSyncOnFlag;
+/* if 1, detect low-high transition, if 0, detect high-low transition */
+Flag AutoAzPECSyncLowHighFlag;
+/* direction that az PEC must be moving in order to trigger auto-sync:
+;0 = either direction, 1 = CCW direction, 2 = CW direction */
+Flag AutoAzPECSyncDirFlag;
+/* debounce the sync signal in software */
+Flag AutoAzPECDeBounce;
+/* PEC cycle set by fullsteps, instead of stepper rotor, so that PEC can cover double and quad worms
+plus other reductions */
+long FullstepsPerPECArray;
+/* index offset between rotor position of 0 and synch point */
+struct AZInt PECIxOffset;
+/* field rotation step size in arc seconds; if zero, then field rotation is ignored */
+double FRStepSizeArcsec;
+/* set to 1 for a sectored field derotator drive unit, otherwise unit may slew large angles */
+Flag SectoredFRDrive;
+/* speed of field rotation motor when slewed by hand paddle */
+int FRStepSpeedMilliSec;
+/* number of windings in stepper motors: most have 4, Vexta 5 phase motors have 5 */
+Flag ReverseFRMotor;
+FOCUS_METHOD FocusMethod;
+Flag ReverseFocusMotor;
+int FocusFastStepsSec;
+int FocusSlowStepsSec;
+int FocusPosition;
+MOTOR_CONTROL_METHOD MotorControlMethod;
+int MotorWindings;
+/* if 1, then output is inverted, ie, from logical high to logical low */
+Flag InvertOutput;
+int KeepAlivePPortPin;
+int KeepAlivePPortValue;
+double AltFullStepSizeArcsec;
+double AzFullStepSizeArcsec;
+double AzFullStepSizeArcsecCW;
+double AzFullStepSizeArcsecCCW;
+Flag ReverseAMotor;
+Flag ReverseZMotor;
+/* 0 if simple ramp, 1 if S ramp */
+Flag HsRampStyle;
+/* if 1, use IRQ 8 to time halfsteps, otherwise disable IRQs and time halfsteps with a loop */
+Flag HsTimerFlag;
+/* delay loop value for slowest halfstep motor speed */
+int MaxDelay;
+/* delay loop value for highest halfstep motor speed */
+int MinDelay;
+/* # of times to repeat delay loop: cuts down on delay array size */
+int HsDelayX;
+/* halfstep ramp time multiplier */
+int HsRampX;
+/* # of steps ok to do without disabling IRQs: ignored if HsTimerFlag is 1 */
+int InterruptHs;
+/* # of repeats of slowest motor speed to hold motors in position */
+int HoldReps;
+/* if non-zero, then overvoltage for halfstepping enabled: this value contains the IRQ8 timer value
+that raises then lowers the control line, which is parallel port 17; if delay method of timing
+halfsteps, then if this value if non-zero, overvoltage line turned at at start of halfstepping */
+int HsOverVoltageControl;
+/* max # of consecutive slews before program recalcs Current equatorial based on Current altaz */
+int MaxConsecutiveSlews;
+/* # of seconds before idle motor centered on a rotor will power down when microstepping */
+int MsPowerDownSec;
+/* number of pulse width modulations per bios clock tick */
+int PWMRepsTick;
+/* whether the PWMRepsTick value should be automatically calculated by averaging */
+Flag AvgPWMRepsTickOnFlag;
+/* reps of PWM[] to form a voltage waveform */
+int MsDelayX;
+/* delay loop at end of each PWM */
+int MsPause;
+/* number of microsteps per fullstep; cannot exceed MaxMs */
+int Ms;
+/* user defined max # of microstep increments per each PWM: cannot exceed a halfstep */
+int MaxIncrMsPerPWM;
+Flag MaxIncrMsPerPWMWasRead;
+/* user defined max # of microstep increments per each PWM for microstepping motion; above this
+value and up to MaxIncrMsPerPWM, the microstepping routine switches to halfstep mode */
+int MsHsToggleIncrMsPerPWM;
+Flag MsHsToggleIncrMsPerPWMWasRead;
+/* max that any value of PWM[] can attain */
+int MaxPWM;
+/* if MaxPWM is in config file */
+Flag MaxPWMFoundFlag;
+/* used to designate type of PWM entry in config.dat: simple form is PWM[x] <value>, complex form is
+PWM[Index] <ValueA> : <ValueB> */
+Flag UseComplexPWMFlag;
+/* ditto for the PWMZ fields */
+Flag UseComplexPWMZFlag;
+/* array to hold the configured PWM values */
+struct AZInt PWM[MaxMs];
+/* holds optional 'Z' motor PWM values */
+struct AZInt PWMZ[MaxMs];
+Flag SavePWMComp;
+/* holds compensating values for PWM current for each winding */
+double PWM_A_Comp[5];
+double PWM_Z_Comp[5];
+/* array to hold the configured PWM values after being corrected for winding current compensation */
+struct AZInt PWM_Comp[MaxMs];
+unsigned COM3Base;
+int COM3IRQ;
+unsigned COM4Base;
+int COM4IRQ;
+char* EncoderString;
+int EncoderComPort;
+long EncoderBaudRate;
+int SerialWriteDelayMs;
+long AltEncoderCountsPerRev;
+long AzEncoderCountsPerRev;
+Flag AltEncoderDir;
+Flag AzEncoderDir;
+double EncoderErrorThresholdDeg;
+double TrackEncoderErrorThresholdDeg;
+Flag MakeEncoderResetLogFile;
+/* comm port to accept LX200 serial protocol commands */
+int LX200ComPort;
+long LX200BaudRate;
+int LX200MotionTimeoutSec;
+long LX200SlewHs;
+/* toggles between standard and long format for coordinates */
+Flag LX200_LongFormat;
+/* program startup state of initializations */
+int StartInitState;
+double Z1Deg;
+double Z2Deg;
+double Z3Deg;
+double DataFileCoordYear;
+double LatitudeDeg;
+double LongitudeDeg;
+double Height;
+double Tz;
+int DST;
+char* TestString;
+unsigned StartPPortAddr;
+int Eyepieces;
+struct EYEPIECE EPFocusPosition[MAX_EYEPIECES];
+
+void ReadConfig( void);
+void ReadPWMValue( void);
+void AskAndWriteConfig( void);
+void WriteConfig( void);
+
+/* encoders... */
+
+#define MaxEnc 15
+#define MaxEncBSeg 15
+#define MaxEncEk 4
+#define MaxEncQRZ 14
+#define MaxEnc629 24
+#define MaxEncSkyCommanderR 16
+#define MaxEncStr 24
+#define EncoderResetLogFile "ENCODERS.TXT"
+
+typedef enum
+{
+		  NoEncoders,
+		  EncoderBSeg,
+        EncoderResetViaR,
+        EncoderResetViaZ,
+		  EncoderNoReset,
+        EncoderMouse,
+        EncoderEk,
+		  EncoderSkyCommander,
+		  EncoderSkyCommanderR,
+		  MaxEncoderType
+}ENCODER_TYPE;
+
+typedef enum
+{
+        NotInitialized,
+        CommError,
+        ReadReady,
+        NoRead,
+        Read
+}ENCODER_STATE;
+
+Byte EncStr[MaxEnc];
+int EncIx;
+ENCODER_TYPE EncoderType;
+ENCODER_STATE EncoderState;
+struct AZLong EncoderCount;
+/* # of times encoders have been reset */
+int EncoderTrackOnResetCount;
+int EncoderTrackOffResetCount;
+int EncoderSlewResetCount;
+/* (re)set encoder box at program start up time - set to false if encoder box has been up and
+running since last time scope.exe was run */
+Flag ResetEncoderBox;
+FILE* EncoderOutput;
+
+void( *ResetEncoders_f_ptr) (void);
+void( *ReadEncoders_f_ptr) (void);
+void( *QueryEncoders_f_ptr) (void);
+
+void InitEncoders( void);
+void CloseEncoderResetLogFile( void);
+void InitEncodersBSeg( void);
+void InitEncodersResetViaR( void);
+void InitEncodersResetViaZ( void);
+void InitEncodersNoReset( void);
+void InitEncodersMouse( void);
+void InitEncodersEk( void);
+void InitEncodersSkyCommander( void);
+void InitEncodersSkyCommanderR( void);
+
+void ResetEncodersBSeg( void);
+void ResetEncodersResetViaR( void);
+void ResetEncodersResetViaZ( void);
+void ResetEncodersNoReset( void);
+void ResetEncodersMouse( void);
+void ResetEncodersEk( void);
+void BuildEncStrRes( void);
+
+void QueryEncodersQ( void);
+void QueryEncoders_y( void);
+void QueryEncoders_e( void);
+void QueryEncoders_cr( void);
+void QueryEncodersMouse( void);
+
+void ReadEncodersQ( void);
+void ReadEncodersBSeg( void);
+void ReadEncodersMouse( void);
+void ReadEncodersEk( void);
+void ReadEncodersSkyCommander( void);
+void ReadEncodersSkyCommanderR( void);
+
+void QueryAndReadEncoders( void);
+void TestEncoders( void);
+
+/* handpad... */
+
+#define RawUpKey 16
+#define RawDownKey 32
+#define RawCCWKey 64
+#define RawCWKey (16 + 32)
+#define RawAltCWKey 128
+#define RawLeftKey (16 + 64)
+#define RawRightKey (32 + 64)
+#define RawMsKey 128
+#define AutoPECSynch101213 (16 + 32 + 64)
+
+#define UpKey 1
+#define DownKey 2
+#define CCWKey 4
+#define CWKey 8
+#define LeftKey 16
+#define RightKey 32
+#define MsKey 64
+
+/* return value from handpad */
+int Handpad;
+/* value of Handpad at start of move */
+int InitHandpad;
+/* if handPad changes during move, HandpadOKFlag set to No */
+int HandpadOKFlag;
+/* Pad's speed switch setting: if true, speed == microstepping */
+int MsSpeed;
+/* Pad's buttons */
+int Buttons;
+Flag AutoPECSynch101213Detected;
+Flag UseAutoPECSynch101213Flag;
+
+void( *ReadHandpad_f_ptr) (void);
+
+void InitializeHandpad( void);
+void SetHandpad( void);
+void ReadHandpadSubr( void);
+void ReadHandpad( void);
+void NoHandpad( void);
+void SetHandpadOKFlag( void);
+void TestHandpad( void);
+
+/* motors.. */
+
+/* vars for single pulse/dir control of motors */
+
+#define A_Pulse 1
+#define A_Dir 2
+#define Z_Pulse 4
+#define Z_Dir 8
+#define A_Power_On 16
+#define Z_Power_On 32
+
+Flag A_Pulse_State;
+Flag Z_Pulse_State;
+Flag FR_Pulse_State;
+Flag Aux_Pulse_State;
+Flag A_PowerOnState;
+Flag Z_PowerOnState;
+
+/* vars relating to determining the PWM reps average value */
+#define SizeofPWMRepsTickArray 64
+
+int AvgPWMRepsTick;
+int PWMRepsTickArray[SizeofPWMRepsTickArray];
+int TotalPWMRepsTickArray;
+int PWMRepsTickArrayIx;
+
+/* vars relating to interrupt timing of steps */
+#define Timer_Int 8
+#define Timer_0 0x40
+/* control for the 8253 timer chip */
+#define Timer_Control 0x43
+/* frequency of the timer (1193181 decimal): a timer tick is normally called every 0x10000 counts,
+or 18.2 per sec */
+#define TIMER_FREQ 0x1234DDL
+
+/* used to store the original interrupt vector of the system timer */
+void interrupt( *ClockVect)();
+
+void( *MoveMs_f_ptr) (void);
+void( *DisplayMsValues_f_ptr) (void);
+void( *AlignMs_f_ptr) (void);
+void( *SteppersOff_f_ptr) (void);
+void( *Hold_f_ptr) (void);
+void( *MoveHs_f_ptr) (void);
+void( *DoOneHs_f_ptr) ( void);
+void( *OutputKeepAlive_f_ptr) ( void);
+
+typedef enum
+{
+        RampUp,
+        MaxSlewUp,
+        MaxSlewDown,
+        RampDown,
+        SlewDone
+}SLEW_STATE;
+
+typedef enum
+{
+        NoAbort,
+        HandpadAbort,
+        MouseAbort,
+        KeyStrokeAbort,
+        LX200Abort,
+        AltLowLimitAbort,
+        AltHighLimitAbort,
+        AzLowLimitAbort,
+        AzHighLimitAbort,
+        GEMflipAbort
+}ABORT_STATE;
+
+/* elapsed time for the current slew in progress */
+double ElapsedHSSec;
+/* sidereal time at start of slew */
+double StartSidTHS;
+/* holds positions to move to using motor control via serial port */
+struct AZLong N;
+
+/* variables that turn off all windings belonging to the stepper motor */
+struct AZByte MotorOff;
+/* actual PWM loop counts per clock tick */
+int ActualPWMRepsTick;
+/* steps: must always be positive */
+struct AZLongV Steps;
+struct AZFlag Dir;
+struct AZFlag EnableMotor;
+
+/* variables relating to halfstepping... */
+
+volatile long timer_count;
+int MaxHsIx;
+double AltLowLimit;
+double AltHighLimit;
+double AzLowLimit;
+double AzHighLimit;
+Flag AltLimitFlag;
+Flag AzLimitFlag;
+long RampSteps;
+struct AZDouble RampRad;
+struct AZDouble InstantRampRad;
+/* if the overvoltage control line used in halfstepping is set logical high */
+Flag HsOverVoltageSet;
+/* unused pport lines that should be outputted again so as to not disturb the port when changing
+the HsOverVoltageLine */
+Byte HsOverVoltageUnusedBiDirPPortLines;
+
+/* holds halfstep bit pattern for parallel port output */
+struct AZByte* HsOut;
+/* used to tell Hold() which motors to energize */
+struct AZByte HoldMotor;
+
+/* for speed control and linear ramping:
+HsReps is array of # of half step repetitions to do for each delay or timer value: delay value is
+set by moving through an empty for next loop HsRepsIx + MinDelay number of times;
+timer value set by HsRepsIx + MinDelay;
+HsRepsIx varies from 0 to MaxDelay - MinDelay;
+HsReps[0] = MAXLONG; */
+long* HsReps;
+struct AZInt HsIx;
+volatile int HsRepsIx;
+int MaxHsRepsIx;
+/* max halfsteps that ASteps or ZSteps can be set to */
+long MaxHs;
+/* # of steps to move */
+long MvmtHs;
+/* initial # of steps to ramp up */
+long RampHs;
+/* # of steps to take for a particular HsReps[HsRepsIx] delay or timer value */
+long SameSpeedHs;
+/* if 1, then don't need IRQs disabled for halfstepping */
+Flag InterruptFlag;
+unsigned int Timer;
+/* # of halfsteps for each stage of halfstep slewing */
+long RampUpSteps, MaxSlewUpSteps, MaxSlewDownSteps, RampDownSteps;
+/* = 1 if slew was commanded from hand paddle */
+Flag SlewStartedFromHandpad;
+Flag TrackingViaHs;
+SLEW_STATE SlewState;
+ABORT_STATE AbortState;
+volatile Flag HoldPWMIsOnFlag;
+
+/*
+        // record of last halfstep amounts
+        #define HsRecFilename "hsrec.txt"
+        FILE* HsRecFile;
+        #define HsRecSize 16
+        struct AZLong HsRec[HsRecSize];
+        int HsRecIx;
+*/
+
+/* variables relating to microstepping... */
+
+/* for microstepping functions */
+struct AZInt MsToDo;
+struct AZDouble MsRunningTotal;
+int HoldAvgPWMRepsTick;
+/* use unique PWM values for 'Z' motor */
+Flag UsePWMZFlag;
+/* # of timer ticks until idle motor centered on a winding is powered down while microstepping */
+int StartMsPowerDownCount;
+/* current MsPowerDownCounts for each motor */
+struct AZInt MsPowerDownCount;
+/* set to True to indicate that PWMTickHandler() is installed */
+Flag PWMTickHandlerInstalledFlag;
+/* set to True by new clock tick interrupt routine: used to signal MoveMs() to
+stop the pulse width modulations */
+Flag PWMTickHandlerCalledFlag;
+/* set by MoveMs() to indicate that pulse width modulations will begin: used by the PWMTickHandler
+interrupt routine to determine if SteppersOff() should be called */
+Flag PWMUnderwayFlag;
+/* # of microsteps per halfstep */
+int MsPerHs;
+/* conversion factor for microstep array indexes to halfstep array indexes */
+int HsIxToMsIxConvFactor;
+/* # of microsteps in (4 or 5) windings */
+int MsInWindings;
+/* accumulated motors' movement stored in form of microsteps */
+struct AZLongV AccumMs;
+/* Ms increment per Microstep PWM; determines speed of microstepping; # of microsteps per PWM */
+struct AZDouble IncrMs;
+/* halfstep increment per PWM time */
+struct AZDouble IncrHs;
+Flag MsAlignFlag;
+/* MaxMsIx is the maximum index for MsPWM; the portion behind MaxMsIx is indexed by MsMotorOffIx and
+consists of motor off commands */
+int MaxMsIx;
+int MsMotorOffIx;
+/* microstepping arrays containing on/offs generating voltage values */
+struct AZByte* MsPWM;
+struct AZInt MsIx;
+/* microstep distances in arc sec */
+struct AZDouble MicroStepSizeArcsec;
+/* alt, az microstep sizes in radians */
+struct AZDouble MsRad;
+/* alt, az halfstep sizes in radians */
+struct AZDouble HsRad;
+/* max microstepping distance to move in radians per tick */
+struct AZDouble MaxMsDistanceRadTick;
+/* max microstepping distance to track in radians */
+struct AZDouble MaxMsDistanceRadTrack;
+/* maximum microstepping speed possible */
+int MaxMsSpeed;
+/* microsteps per clock tick */
+struct AZDouble MsTick;
+/* motor powered down status during microstepping */
+Flag MsPowerDown;
+/* is microstepping proceeding by halfsteps in order to spin as fast as possible? */
+struct AZFlag GoByHs;
+/* steps actually moved in microstepping routine */
+struct AZInt StepsMoved;
+struct AZLong StepsToMove;
+Flag MsZeroSoundOn;
+int KeepAlivePPortPinMask;
+Flag MoveHsUnderway;
+
+/* following are used for moving motors at a constant rate and acceleration */
+Flag TrackByRateFlag;
+struct AZDouble TrackMsPerSec;
+struct AZDouble TrackMsAccel;
+struct AZDouble TrackMsTick;
+struct AZFlag TrackDir;
+struct AZInt TrackHoldDir;
+struct AZDouble TrackHoldMsTick;
+struct AZDouble TrackAccumMsAccel;
+
+void InitMotors( void);
+void CalcVarsRelatingToMs( void);
+void CalcVarsRelatingToStepSizes( void);
+void CalcVarsRelatingToPWMRepsTick( void);
+void StartPWMTickHandler( void);
+void StopPWMTickHandler( void);
+void CreateHsArrays( void);
+void InitHsArrays( void);
+void WritePWMValues( void);
+void FreeHsArrays( void);
+void CreateMsArrays( void);
+void CleanupPWM( struct AZInt* PWM);
+void InitMsArrays( void);
+void FreeMsArrays( void);
+void CloseSteppers( void);
+void InitMsTickVars( const int MsArcsecSec);
+void WritePhase5Data( int AZData);
+void SteppersOffPWM( void);
+void SteppersOffPulseDir( void);
+void HoldPWM( void);
+void HoldPulseDir( void);
+void PauseUntilNewSidTime( void);
+void OutputKeepAlive( void);
+void SetBacklashDirA( int Dir);
+void SetBacklashDirZ( int Dir);
+void AddBacklashA( long Ms);
+void AddBacklashZ( long Ms);
+void CalcActualBacklashRad( void);
+void DoOneHsPulseDir( void);
+void DoOneHs( void);
+void DoHsDelayLoop( void);
+void SetTickDelay( void);
+void interrupt SlewTickHandler( void);
+void RoundNearestFullstep( void);
+void SetPPortLine17High( void);
+void SetPPortLine17Low( void);
+void MoveHs( void);
+void MoveHsUsingIRQTimer( void);
+void MoveHsUsingDelayLoop( void);
+void interrupt PWMTickHandler( void);
+void MoveMs( void);
+void UpdatePWMAverage( void);
+void DisplayMsValuesPWM( void);
+void DisplayMsValuesPulseDir( void);
+void DisplayMsValuesSerial( void);
+void AlignMs( void);
+void MoveMsPulseDir( void);
+
+/* convert... */
+
+/* Conversion routines are based on Sky and Tel, Feb, '89, pg 194-196,
+Convert functions input and output horizon increasing CW, then convert to CCW internally for
+calculating as per S&T program.
+Set coordinates including SidT before making function calls.
+Avoid repeatedly alternating GetEquat() and GetAltaz() calls, which can lead to hysteresis or creep
+of the coordinates of approx 0.1 arc sec */
+
+#define InitHistoryFile "INITHIST.DAT"
+
+#define WHY_INIT_STARTUP "startup"
+#define WHY_INIT_REINIT "reinit"
+#define WHY_INIT_ANALYSIS "analysis"
+#define WHY_INIT_TEST "test"
+#define WHY_INIT_MANUAL_ENTRY "manual"
+#define WHY_INIT_KEYBOARD "keyboard"
+#define WHY_INIT_HANDPAD "handpad"
+#define WHY_INIT_OPTIMIZE "optimize"
+#define WHY_INIT_ALTOFF "altoff"
+#define WHY_INIT_SCROLL "scroll"
+#define WHY_INIT_LX200 "LX200"
+
+#define Init1Str "init1"
+#define Init2Str "init2"
+#define Init3Str "init3"
+
+typedef enum
+{
+        InitEquat = 1,
+        InitAltaz,
+        InitAltAlt,
+        InitNone,
+        InitCfgFile,
+        MaxInitState
+}INIT_STATE;
+
+INIT_STATE InitStateValues;
+int InitState;
+char* InitText[MaxInitState];
+
+char WhyInit[NameSize];
+
+/* storage arrays for matrix multiplication */
+double QQ[4][4];
+double VV[4][4];
+double RR[4][4];
+double XX[4][4];
+double YY[4][4];
+
+/* fabrication errors (in radians): */
+
+/* offset of elevation to perpendicular of horizon, ie, one side of rocker box higher than the other */
+double Z1;
+/* optical axis pointing error in same plane, ie, tube horiz.: optical axis error left to right (horiz) */
+double Z2;
+/* correction to zero setting of elevation, ie, vertical offset error */
+double Z3;
+/* if Z1, Z2, or Z3 is non-zero */
+Flag Z1Z2NonZeroFlag;
+/* coordinates from initialize position #1, and #2 */
+struct Position One, Two, Three;
+
+Flag WriteInitHistoryFile;
+
+Flag UpdatePostInitVarsFlag;
+/* following values in radians */
+double LongitudeRad;
+/* vars based on config.dat values */
+double ConfigLat;
+double ConfigSinLat;
+double ConfigCosLat;
+double LatScopeZenith;
+double LatEquatPole;
+/* used by field rotation routine */
+double SinLatEquatPole;
+double CosLatEquatPole;
+double SinLatEquatPoleDividedByCosLatEquatPole;
+double HoldCurrentDec;
+double HoldCosCurrentDec;
+double HoldSinCurrentDec;
+struct AZDouble PolarAlignEquatPole;
+struct AZDouble PolarAlignAltazPole;
+struct AZDouble ZenithOffset;
+/* field rotation angle */
+double FieldR;
+/* rate of field rotation in degrees per minute */
+double FieldRate;
+/* azimuth offset of init'ed position from true azimuth */
+double AzOff;
+/* Hour Angle Offset = Local Sidereal Time - scope's meridian, or, HAOff = LST - HA - Ra, or,
+HA = LST - HAOff - Ra; (+) offset = scope tilted to West, (-) offset = scope tilted to East;
+HAOff varies from - offset to + offset (should only be a few deg.) */
+double HAOff;
+struct HMSH HAOffHMSH;
+double AirMass;
+/* sin of the altitude used to calculate the air mass */
+double SinAltAirMass;
+/* altitude used to calculate the air mass */
+double AltAirMass;
+double DomeAzimuth;
+/* working vars */
+double F, H, W;
+/* pick between different subroutines to solve for scope's altaz coordinates (Z1 and Z2 intertwined - must be solved iteratively);
+valid values 'S' (simple)
+                                 'B' (per Taki's naming)
+                                 'T' (revised by Taki for exact solution)
+                                 'L' (per Larry Bell)
+                                 'U' (Larry Bell's altitude solution and Taki's exact solution for azimuth) */
+char SubrFlag;
+
+/* for site conversion based on configuration vars */
+struct Position SitePos;
+double RefractDec;
+double RefractRa;
+
+void GetSiteAltaz( void);
+void GetSiteEquat( void);
+void CalcLatVars( void);
+
+void InitConvert( void);
+void InitConvertEquat( void);
+void InitConvertAltaz( void);
+void InitConvertAltAlt( double Az);
+void DetectGEMflippedFromCurrentAltaz( void);
+Flag SafetyZoneConflict( void);
+void SaveInits( void);
+void FReadPosition( FILE* File, struct Position* Pos);
+void FReadPositionToNewLine( FILE* File, struct Position* Pos);
+void FWritePosition( FILE* File, struct Position* Pos, Flag CRLF);
+Flag LoadAlign( void);
+void SetMountErrorsDeg( const double Z1Deg, const double Z2Deg,
+const double Z3Deg);
+void ZeroArrays( void);
+void CheckHoldSinCosCurrentDec( void);
+void ArrayAsignInit( const int Init);
+void GenerateThirdInit( void);
+void TransformMatrix( void);
+void InitMatrix( const int Init);
+void SubrA( void);
+void SubrSwitcher( void);
+void SubrS( double CosF, double CosH, double SinF, double SinH);
+void SubrB( double CosF, double CosH, double SinF, double SinH, double CosZ1, double CosZ2, double SinZ1, double SinZ2);
+void SubrT( double CosF, double CosH, double SinF, double SinH, double CosZ1, double CosZ2, double SinZ1, double SinZ2);
+double GetApparentAlt( double CosZ1, double CosZ2, double SinZ1, double SinZ2);
+void SubrL( double CosF, double CosH, double SinF, double SinH, double CosZ1, double CosZ2, double SinZ1, double SinZ2);
+void SubrU( double CosF, double CosH, double SinF, double SinH, double CosZ1, double CosZ2, double SinZ1, double SinZ2);
+void DeterminateSubr( void);
+void AngleSubr( void);
+void CheckForPostInitVars( void);
+void CalcPostInitVars( void);
+void GetAltaz( void);
+void TranslateAltazAcrossPole( void);
+void GetEquat( void);
+void CalcFieldR( void);
+void CalcFieldRate( void);
+void CalcAirMass( void);
+void CalcDomeAzimuth( void);
+void CalcSiteRefractScopeToSky( void);
+void CalcSiteRefractSkyToScope( void);
+void GetAltAltAz( double MatchFieldRotation);
+void TestAltAltAzTrack( void);
+void TestConvert( void);
+
+/* advanced convert routines */
+
+#define AnalysisErrorFile "ANALYSIS.ERR"
+
+/*used to compute Z1, Z2, Z3 */
+
+double BestZ1;
+double BestZ2;
+double BestZ3;
+double MaxPointErr;
+double PointErrRMS;
+double BestPointErrRMS;
+double LastDeltaAx3;
+double AltOffset;
+double AltOffsetFromCalcPostInitVars;
+struct AZDouble PMC;
+
+Flag LoadAnalysisFileIntoMemory( void);
+void CalcAnalysisErrors( void);
+void CalcAnalysisErrorsWriteFile( void);
+void AppendAnalysisToPMC( void);
+Flag LoadPMC( void);
+void DisplayLinkPMC( void);
+void CalcPMCErrors( void);
+void CalcPMC( double A, double Z);
+Flag ComputeBestZ123FromPosition( struct Position* P);
+Flag ComputeBestZ123FromAnalysisFile( void);
+Flag ComputeBestZ123FromLinkPos( void);
+Flag ComputeBestZ12FromLinkPosSubr( double StartZ1, double StartZ2, double Z12Range, double Z12Interval, double MinInterval, double WorkZ3);
+Flag ComputeBestZ3FromPosition( struct Position* P);
+Flag ComputeBestZ3FromAnalysisFile( void);
+Flag ComputeBestZ3FromLinkPos( void);
+double CalcEquatAngularSep( struct Position* A, struct Position* Z);
+double CalcAltazAngularSep( struct Position* A, struct Position* Z);
+double AngSepDiff( struct Position* A, struct Position* Z);
+void CalcAltOffset( struct Position A, struct Position Z);
+void CalcAltOffsetIteratively( struct Position A, struct Position Z);
+void TestAltOffset( void);
+
+/* alt and az EC... */
+
+#define AltAzECFile "ALTAZEC.DAT"
+#define AltAltECFile "ALTALTEC.DAT"
+#define AzAzECFile "AZAZEC.DAT"
+
+#define EC_Resolution_Deg 5
+#define ECSize (360/EC_Resolution_Deg)
+
+/* ptr to array of altitude vs azimuth error correction values with Altec_Resolution_Deg spacing
+between indexes */
+float* AltAzEC;
+float AltAzECRad;
+/* ptr to array of altitude vs altitude error correction values with Altec_Resolution_Deg spacing
+between indexes */
+float* AltAltEC;
+float AltAltECRad;
+/* ptr to array of azimuth vs azimuth error correction values with Altec_Resolution_Deg spacing
+between indexes */
+float* AzAzEC;
+float AzAzECRad;
+
+void InitAltAzEC( void);
+void CloseAltAzEC( void);
+void MallocAltAzEC( void);
+Flag LoadAltAzECFile( void);
+void SaveAltAzECFile( void);
+void SetAltAzECValue( void);
+void AnalysisToAltAzEC( void);
+
+void InitAltAltEC( void);
+void CloseAltAltEC( void);
+void MallocAltAltEC( void);
+Flag LoadAltAltECFile( void);
+void SaveAltAltECFile( void);
+void SetAltAltECValue( void);
+void AnalysisToAltAltEC( void);
+
+void InitAzAzEC( void);
+void CloseAzAzEC( void);
+void MallocAzAzEC( void);
+Flag LoadAzAzECFile( void);
+void SaveAzAzECFile( void);
+void SetAzAzECValue( void);
+void AnalysisToAzAzEC( void);
+
+/* PEC... */
+
+#define PECFile "PEC.DAT"
+#define PECALT "PECALT"
+#define PECAZ "PECAZ"
+#define TXT "TXT"
+#define DOT_TXT ".TXT"
+#define PECSize 200
+
+/* return value from auto PEC sync line using parallel port pin 15 */
+#define READ_AUTO_PEC_SYNC_15 (AutoPECSyncSignal = (inportb( PPortAddrInNibble)& 8)>>3)
+/* return value from auto PEC sync line using parallel port pin 16 */
+#define READ_AUTO_PEC_SYNC_16 (AutoPECSyncSignal = (inportb( PPortAddrInOutNibble)& 4)>>2)
+/* return value from auto PEC sync line using parallel port pin 17 */
+#define READ_AUTO_PEC_SYNC_17 (AutoPECSyncSignal = (inportb( PPortAddrInOutNibble)& 8)>>3)
+
+struct PECWORK
+{
+        int TenthsArcsec;
+        Flag Entry;
+};
+
+struct PECWORK* P;
+
+typedef enum
+{
+        altaxis,
+        azaxis
+}ALTAZ_AXIS;
+
+ALTAZ_AXIS Altaz_Axis;
+
+int AutoPECSyncSignal;
+int AltPECFileNameCount;
+int AzPECFileNameCount;
+char Fname[13];
+int Ix;
+int TenthsArcsec;
+/* microsteps per one complete PEC revolution */
+long MsPerPECArray;
+/* microsteps per PEC index */
+long MsPerPECIx;
+/* indexes to PEC array */
+struct AZInt PECIx;
+/* PEC to adjust Current coordinates by */
+struct AZDouble PECToAdd;
+/* fractional or decimal values of PECIx */
+struct AZDouble DecimalPECIx;
+/* direction of movement: if CW then PECIx is increasing, else decreasing */
+struct AZFlag PECDir;
+/* based on PECDir, the next PECIx */
+struct AZInt NextPECIx;
+struct AZInt LastPECIxOffset;
+/* arrays of PEC */
+struct AZInt PECs[PECSize];
+
+Flag AutoAltPECSyncSignal;
+Flag LastAutoAltPECSyncSignal;
+Flag AutoAzPECSyncSignal;
+Flag LastAutoAzPECSyncSignal;
+
+void InitPEC( void);
+void SetPECVars( void);
+void ZeroAltPEC( void);
+void ZeroAzPEC( void);
+void LoadPEC( void);
+void SavePEC( char* Name);
+void BuildAltPECFilename( void);
+void BuildAzPECFilename( void);
+void SetPECIxOffsetA( void);
+void SetPECIxOffsetZ( void);
+void GetPECIx( void);
+void DisplayPECgraphically( void);
+Flag AveragePECAnalysisFiles( Flag axis);
+void MedianSmoothPEC( int Num);
+void DisplayAltPEC( void);
+void DisplayAzPEC( void);
+void TurnPECOn( void);
+void TurnPECOff( void);
+
+/* guide... */
+
+#define GuideAltFile "GUIDEALT.DAT"
+#define GuideAzFile "GUIDEAZ.DAT"
+/* can hold up to 3 pec cycles */
+#define MaxGuideIx 600
+
+struct GuideArray
+{
+        Byte PECIx;
+        int TenthsArcsec;
+};
+
+struct AZGuideArray
+{
+        struct GuideArray A, Z;
+};
+
+typedef enum
+{
+        /* 0 for no processing underway */
+        WritingToGuideArray = 1,
+        ReadyToSaveGuideArray
+}GUIDE_ARRAY_FLAG;
+
+GUIDE_ARRAY_FLAG GuideArrayFlag;
+
+Flag GuideFlag;
+
+/* guiding speed in radians per clock tick */
+double GuideRadTick;
+/* accumulated guiding amounts in altitude and azimuth */
+struct AZDouble AccumGuide;
+struct AZInt GuideIx;
+struct AZGuideArray Guides[MaxGuideIx];
+/* direction of motion when writing PECIx's to guides[] */
+struct AZFlag GuideDir;
+struct AZInt PECIxCrossZero;
+struct AZInt StartGuidesIxCrossZeroPECIx;
+struct AZInt EndGuidesIxCrossZeroPECIx;
+
+void InitGuide( void);
+void StopGuide( void);
+void InitSaveGuideArray( void);
+void SaveGuideArray( void);
+void SaveGuideAlt( void);
+void SaveGuideAz( void);
+void WriteToGuideArray( void);
+void LoadGuideAlts( void);
+void LoadGuideAzs( void);
+void AnalyzeGuideAltArray( void);
+void AnalyzeGuideAzArray( void);
+Flag CreateAltPECFromGuideArray( void);
+Flag CreateAzPECFromGuideArray( void);
+
+/* IACA event... */
+
+#define PUT_SCOPE if( IACA_Flag) PutScope( Current.Ra, Current.Dec)
+
+long far* IACA_Ra_Decimal_Hrs_Ptr;
+long far* IACA_Dec_Decimal_Degrees_Ptr;
+long far* Scope_Ra_Decimal_Hrs_Ptr;
+long far* Scope_Dec_Decimal_Degrees_Ptr;
+double Conv_Factor;
+
+void InitIACA( void);
+void PutScope( double RaRad, double DecRad);
+int NewIACA( void);
+void GetIACA( double* RaRad, double* DecRad);
+void TestIACA( void);
+
+/* LX200 protocol...
+see lx200.txt for lx200 protocol notes;
+the serial interrupt routine reads input from an external device outputting lx200 protocol serial
+commands;
+every bios clock tick serial new characters stored in the serial input buffer are copied to the
+lx200 circular queue;
+these characters are then scanned and acted upon: several commands may be acted upon in a single
+bios clock tick;
+setting the test mode to lx200 will display inputed characters and the deciphered commands */
+
+#define LX200_ACK 6
+#define DegSym (char) 223
+#define LX200_OK '1'
+#define LX200QueueSize 78
+#define LX200_Cmd_Array_Size 16
+#define LX200_CMD_STR_SIZE 3
+
+typedef enum
+{
+        NoAck,
+        Ack,
+        AlignAltaz,
+        AlignACK,
+        AlignLand,
+        AlignPolar,
+        ReticleCommand,
+        GetDistance,
+        FocusOut,
+        FocusIn,
+        FocusQuit,
+        FocusSetFast,
+        FocusSetSlow,
+        GetRa,
+        GetDec,
+        GetAlt,
+        GetAz,
+        GetSidT,
+        GetLocalT24,
+        GetLocalT12,
+        GetSiteName,
+        GetMinQualityFind,
+        GetDate,
+        GetClockStatus,
+        GetLat,
+        GetLongitude,
+        GetTz,
+        GetField,
+        GetFFspeed,
+        GetFfspeed,
+        GetFocusPos,
+        TimeQuartz,
+        LI_command,
+        SetNGCLibrary,
+        SetStarLibrary,
+        MoveDirRateNorth,
+        MoveDirRateSouth,
+        MoveDirRateEast,
+        MoveDirRateWest,
+        StartSlew,
+        StopSlew,
+        StopMotionNorth,
+        StopMotionSouth,
+        StopMotionEast,
+        StopMotionWest,
+        SetMotionRateGuide,
+        SetMotionRateCenter,
+        SetMotionRateFind,
+        SetMotionRateSlew,
+        SetRa,
+        SetDec,
+        SetField,
+        SetFFspeed,
+        SetFfspeed,
+        SetCurrentHigherLimit,
+        SetSidT,
+        SetLocalT,
+        SetDate,
+        SetGMTOffset,
+        SetSiteNumber_S,
+        SetLat,
+        SetLongitude,
+        SetBrightMagLimitFindOperation,
+        SetFaintMagLimitFindOperation,
+        LargeSizeLimitFindOperation,
+        SmallSizeLimitFindOperation,
+        Sw_command,
+        NextMinQualityFind,
+        SetTypeStringForFind,
+        Sync,
+        SetSiteNumber_W,
+        ToggleLongFormat,
+        GetFirmwareIDString,
+        GetFirmwareDate,
+        GetProductName,
+        ReadGuideArcsecSec,
+        SendGuideArcsecSec,
+        SetHandpadMode,
+        HandpadLeftKey,
+        HandpadRightKey,
+        SetInit1,
+        SetInit2,
+        SetInit3,
+        ReadMsArcsecSec,
+        SendMsArcsecSec,
+        SendFieldR,
+        SetObjectName,
+        PecOnOff,
+        MoveHomePosition,
+        FROn,
+        FROff,
+        LX200_Clear_Display,
+        LX200_StringCommand,
+        LX200_Unfinished_Cmd,
+        LX200_Unknown_Cmd0,
+        LX200_Unknown_Cmd1,
+        LX200_Unknown_Cmd2,
+        LX200_Ignored_Cmd,
+        MaxLX200_COMMAND_TYPE
+}LX200_COMMAND_TYPE;
+
+struct Position In;
+
+/* 2 character descriptions of command names */
+char LX200_Cmd_Str[MaxLX200_COMMAND_TYPE][LX200_CMD_STR_SIZE];
+LX200_COMMAND_TYPE LX200_Motor_Cmd, LX200_Speed_Cmd;
+LX200_COMMAND_TYPE LX200_Focus_Cmd, LX200_Focus_Speed_Cmd;
+int LX200_Cmd_Array_Ix;
+/* array of commands */
+LX200_COMMAND_TYPE LX200_Cmd_Array[LX200_Cmd_Array_Size];
+/* circular queue that LX200 protocol serial input is read into */
+char LX200Queue[LX200QueueSize];
+int LX200_Ix, Beg_LX200_Ix;
+/* count of commands processed */
+int LX200_Cmd_Count;
+Flag LX200_OpenEndedSlewOn;
+struct AZLong LX200SlewSteps;
+struct Position SlewCurrent;
+Flag SetCurrentToSlew;
+int LX200MinQualityFind;
+Flag LX200LeftButton;
+Flag LX200RightButton;
+Flag LX200CmdProcessingUnderway;
+#define MaxObjectName 23
+char LX200_Object_Name[MaxObjectName+1];
+
+const enum
+{
+        MenuQuit,
+        MenuSite,
+        MenuSaveConfigFile,
+        MenuDataFile,
+        MenuDataFileClosest,
+        MenuDataFileClosestNotSame,
+        MenuDataFileClosestNotInputFile,
+        MenuSearchDataFiles,
+        MenuGrandTourClosest,
+        MenuScrollTour,
+        MenuMinorPlanets,
+        MenuWriteInputComment,
+        MenuDosShell,
+        MenuGuide,
+        MenuUserDefinedHotkeys,
+        MenuHotkeys,
+        MenuHandpadDesign,
+        MenuHandpad,
+        MenuSelectHandpadMode,
+        MenuHPUpdateDrift,
+        MenuReverseUpDownButtons,
+        MenuTrack,
+        MenuFRMotorTrack,
+        MenuStepsizes,
+        MenuFRStepsize,
+        MenuMsSpeed,
+        MenuGuideSpeed,
+        MenuFocusFastSpeed,
+        MenuFocusSlowSpeed,
+        MenuChangeGuideFRAngle,
+        MenuHandpadLeft,
+        MenuHandpadRight,
+        MenuHandpadSpeed,
+        MenuReadSlew,
+        MenuWriteSlew,
+        MenuDecMotor,
+        MenuReverseAZMotors,
+        MenuReverseFRMotor,
+        MenuReverseFocusMotor,
+        MenuChangeHsParms,
+        MenuChangeMsParms,
+        MenuAutoMsParms,
+        MenuChangeBacklashParms,
+        MenuZeroBacklash,
+        MenuAutoGEMFlipOnOff,
+        MenuLX200Control,
+        MenuTestSerial,
+        MenuTestPPort,
+        Menu2MotorTrack,
+        MenuTrackEncoder,
+        MenuScreen,
+        MenuPECOnOff,
+        MenuPECSynchAlt,
+        MenuPECSynchAz,
+        MenuPECReload,
+        MenuPECDisplay,
+        MenuPECAverageFiles,
+        MenuPECMedianSmooth,
+        MenuPECGuidingAltDisplay,
+        MenuPECGuidingAzDisplay,
+        MenuPECZeroOut,
+        MenuDisplayInit,
+        MenuKillInits,
+        MenuEnterInit1,
+        MenuEnterInit2,
+        MenuEnterInit3,
+        MenuClosestInit,
+        MenuInit1,
+        MenuInit2,
+        MenuInit3,
+        MenuSetZ1Z2Z3,
+        MenuAltOffset,
+        MenuAzOffsetAxisAlign,
+        MenuGraphAnalysis,
+        MenuPurgeAnalysis,
+        MenuAnalysisBestZ1Z2Z3,
+        MenuGraphZ1Z2Z3,
+        MenuPolarAlign,
+        MenuAltAzEC,
+        MenuAltAzECOnOff,
+        MenuAltAltEC,
+        MenuAltAltECOnOff,
+        MenuAzAzEC,
+        MenuAzAzECOnOff,
+        MenuAnalysisToPMC,
+        MenuGraphPMC,
+        MenuPMCOnOff,
+        MenuWriteAnalysisPoint,
+        MenuInputEquat,
+        MenuInputEquatToAltaz,
+        MenuOffsetEquat,
+        MenuDriftEquat,
+        MenuInputAltaz,
+        MenuOffsetAltaz,
+        MenuDriftAltaz,
+        MenuZeroDrift,
+   MenuResetDrift,
+        MenuResetAccumDrift,
+        MenuSav1,
+        MenuRes1,
+        MenuSav2,
+        MenuRes2,
+        MenuRestoreLastObject,
+        MenuHomeCoord,
+        MenuMoveEquat,
+        MenuMoveAltaz,
+        MenuMoveHome,
+        MenuMoveHs,
+        MenuMoveMs,
+        MenuMoveGEMFlip,
+        MenuMoveZeroPEC,
+        MenuMoveFocus,
+        MenuMoveFocusEP,
+        MenuSaveFocusEP,
+        MenuResetFocus,
+        MenuResetEquat,
+        MenuResetAltaz,
+        MenuResetHome,
+        MenuInitEncoders,
+        MenuResetToEncoders,
+        MenuGEMMeridianFlip,
+   MenuGEMFlipPossible,
+        MenuFRReset,
+        MaxMenu
+};
+
+typedef enum
+{
+        LX200Initiated,
+        HandpadInitiated,
+        MouseInitiated,
+        KeyboardInitiated,
+        ScrollInitiated,
+        NotInitiated
+} INITIATED_TYPE;
+
+INITIATED_TYPE InitiatedType;
+
+void InitLX200Input( void);
+void InsertLX200CmdIntoArray( const LX200_COMMAND_TYPE LX200_Cmd_To_Add);
+Flag ReadLX200Input( void);
+Flag ReadLX200InputSubr( void);
+void LX200_Write_Ra( void);
+void LX200_Write_Dec( void);
+void LX200_Write_Alt( void);
+void LX200_Write_Az( void);
+void LX200_Write_SidT( void);
+void LX200_Write_LocalT( void);
+void LX200_GetSiteName( void);
+void LX200_Write_MinQualityFind( void);
+void LX200_Write_Date( void);
+void LX200_Write_Clock_Status( void);
+void LX200_Write_Lat( void);
+void LX200_Write_Long( void);
+void LX200_Write_Tz( void);
+void LX200_Write_Field( void);
+void LX200_GetDistance( void);
+void LX200_GetProductName( void);
+void LX200_GetFirmwareDate( void);
+void LX200_GetFirmwareIDString( void);
+void LX200_Custom_GetFocusPosition( void );
+void LX200_Custom_GetFocusSpeed( int type);
+void LX200_Custom_SetFocusSpeed( int type, int FocusStepsSec);
+Flag CharIsNumeric( int IxQ);
+int LX200_Read_Int_From_Queue( int IxQ);
+int LX200_Incr_Ix_Until_Terminate_Char( int* Ix);
+void LX200_Set_IncrIx( const int Ix, int *IncrIx);
+void LX200_Read_Ra( const int Ix);
+void LX200_Read_Dec( const int Ix);
+void LX200_Read_SidT( const int Ix);
+void LX200_Read_LocalT( const int Ix);
+void LX200_Read_CurrentDate( const int Ix);
+void ProcessLX200Cmds( void);
+void AbortLX200_IRQ8Slew( void);
+void ProcessLX200_Motor_Cmd( void);
+void ProcessLX200FocusByMethod( void);
+void ProcessLX200Focus_OnOff_16_17( void);
+void ProcessLX200Focus_OnOff_16_17_Slow1_14( void);
+
+/* handpad event... */
+
+/* 2 sec delay */
+#define StartHandpadTimer 18
+/* max possible number of windings * quarter step division */
+#define sizeofQSC 20
+
+#define RecordEquatFile "RECORD.DAT"
+#define AnalysisFile "ANALYSIS.DAT"
+
+typedef enum
+{
+        HandpadOff,
+        InitAutoOn,
+        Init1On,
+        Init2On,
+        Init3On,
+        HandpadPolarAlign,
+        AnalyzeOn,
+        GuideOn,
+        GuideStayOn,
+        GuideStayRotateOn,
+        GuideDragOn,
+        GrandTour,
+        ScrollTour,
+        ScrollAutoTour,
+        RecordOn,
+        ToggleTrack,
+        HandpadFR,
+        HandpadFocus,
+        HandpadAux,
+        MaxHandpadFlag
+}HANDPAD_FLAG;
+
+HANDPAD_FLAG HandpadFlag;
+
+typedef enum
+{
+        Aux1,
+        Aux14,
+        Aux16,
+        Aux17,
+        AuxOff
+}AUX_CONTROL;
+
+AUX_CONTROL AuxControl;
+
+/* tracking to current Ra, Dec stopped when flag == false; */
+/* altaz mvmt initiated by handpad allowed regardless of flag */
+Flag TrackFlag;
+/* grand tour on */
+Flag GrandTourFlag;
+/* scroll tour on */
+Flag ScrollFlag;
+/* polar align on */
+Flag HPPolarAlignFlag;
+/* = 1 if in handpadaux mode, a directional button has been pressed */
+Flag HandpadAuxButtonPressed;
+/* signifies that a directional button has been pressed while handpad is in focus mode */
+Flag HandpadFocusButtonPressed;
+int HandpadButtonTimer;
+int RecordEquatTimer;
+Flag DisplayAltAutoSynchFlag;
+Flag DisplayAzAutoSynchFlag;
+Flag HandpadAuxControlOnFlag;
+
+/* variables relating to field rotation... */
+
+/* if field rotation motor on or active */
+Flag FRMotorOn;
+/* field rotation motor tracking on or off */
+Flag FRMotorTrackOn;
+/* field rotation motor step size caused by a single pulse */
+double FRStepSize;
+/* current field rotation angle of motor/focuser assembly */
+double FRMotorAngle;
+/* angle for FR motor to move (as always, in radians) */
+double FRAngleToMove;
+/* reset FRMotorAngle if difference between field rotation angle and current field rotation angle of
+motor/focuser is greater than this */
+double ResetFRMotorAngleThreshold;
+/* holds parallel port pin assignment for field rotation motor step control */
+Byte FRPulseBit;
+/* holds parallel port pin assignment for field rotation motor direction control */
+Byte FRDir;
+/* flag indicating that the field rotation motor step control line has been raised */
+Flag FRPulse;
+/* value or state of the pair of unused parallel port lines: to be presevered while outputting the
+field rotation motor step and direction control lines */
+Byte UnusedFRPPortLines;
+/* true if MoveMs() says to pulse the field rotation motor */
+Flag PulseFR;
+Flag HandpadFRMotorControlOnFlag;
+int FRDiagPulseHighCW;
+int FRDiagPulseHighCCW;
+int FRDiagPulseLow;
+int FRDiagReset;
+double FRStepsToMove;
+double FRStepIncrPerPWM;
+double FRStepsDone;
+double HoldFRSteps;
+double MaxFRStepsPerTick;
+
+/* variables relating to focusing via stepper motor... */
+
+typedef enum
+{
+        FocusPlus,
+        FocusMinus,
+        FocusStop
+} FOCUS_CONTROL;
+
+FOCUS_CONTROL FocusControl;
+
+/* holds parallel port pin assignment for focus motor direction control */
+Byte FocusDir;
+/* holds parallel port pin assignment for focus motor step control */
+Byte FocusPulseBit;
+/* flag indicating that the field rotation motor step control line has been raised */
+Flag FocusPulse;
+/* value or state of the pair of unused parallel port lines: to be presevered while outputting the
+focus motor step and direction control lines */
+Byte UnusedFocusPPortLines;
+/* true if MoveMs() says to pulse the focus motor */
+Flag PulseFocus;
+int FocusDiagPulseHighCW;
+int FocusDiagPulseHighCCW;
+int FocusDiagPulseLow;
+Flag HandpadFocusMotorControlOnFlag;
+double FocusStepsToMove;
+double FocusStepIncrPerPWM;
+double FocusStepsDone;
+double HoldFocusSteps;
+
+/* counts of consecutive slews when scope should be microstepping tracking...
+if counts reach max values defined in the config file, then scope resets current equatorial to
+current altazimuth */
+int ConsecutiveSlews;
+
+/* move initiated by MoveToCurrentRaDec() */
+Flag MoveToCurrentRaDecFlag;
+/* if true, add in drift */
+Flag DriftEquatFlag;
+Flag DriftAltazFlag;
+
+Flag GEMflippedFlag;
+double AutoGEMFlipOnFuzzRad;
+double AutoGEMFlipOffFuzzRad;
+
+/* backlash */
+/* amount of backlash in gearing in radians */
+struct AZDouble BacklashRad;
+/* similarly but in microsteps */
+struct AZLong BacklashMs;
+/* amount of actual backlash taken up: 0 means fully taken up in CW direction, value = BacklashRad
+means fully taken up in CCW direction */
+struct AZDouble ActualBacklashRad;
+/* similarly but in microsteps */
+struct AZLong ActualBacklashMs;
+/* non-zero backlash in either Alt or Az */
+Flag BacklashFlag;
+/* if negative backlash: motor moves in opposite direction of motion */
+struct AZFlag NegBacklash;
+/* following used in AddBacklashToDeltaAltazMove() */
+#define LastBacklashDirSize 2
+struct AZFlag LastBacklashDir[LastBacklashDirSize];
+struct AZFlag LastBacklashDirIx;
+struct AZFlag UnanimousBacklashDir;
+
+/* max # of microsteps per clock tick */
+double MaxMsTick;
+struct AZDouble Delta;
+double StartDriftT, EndDriftT;
+struct AZDouble AccumDrift;
+/* equat drift per hour, altaz drift per min */
+struct Position Drift, Offset, DriftTick;
+/* drift to drag guide star across knife edge autoguider, values from
+config.dat */
+struct Position Drag, DragTick;
+Flag UseQSC;
+/* halfstep correction */
+struct AZDouble QSC;
+/* array of corrective values to interpolate from: make 5 windings * 2 halfsteps per winding in
+size and ignore last two array members if using the much more common 4 winding motors */
+struct AZDouble QSCvalues[sizeofQSC];
+Flag InsideProcessHPEventsFocusMethod_Pulse_Dir;
+
+void InitHPEvent( void);
+void CalcBacklashVars( void);
+void InitFR( void);
+void SetCurrentAltazToAccumMs( void);
+void SetAccumMsToCurrentAltaz( void);
+void CalcQSC( void);
+void TrackOff( void);
+void HPEventMoveHs( void);
+void HPEventMoveMs( void);
+void AltazMoveMs( void);
+void SetFRControlLines( void);
+void ReverseFRDir( void);
+void GetUnusedPPortLines( void);
+void SetFRStepsDirMoveMs( void);
+void SetFRStepsDirHandpad( void);
+void SetFocusControlLines( void);
+void ReverseFocusDir( void);
+void SetFocusStepsDirMoveMs( void);
+void SetPulseFRPulseFocusInMoveMs( void);
+void PulseFRFocusPerPWM( void);
+void CheckSiderostatAltaz( void);
+void ProcessLimitError( const char* Msg);
+Flag GEMneedsFlipping( void);
+void MoveToCurrentRaDec( void);
+void AddBacklashToDeltaAltazMove( void);
+void AddBacklashToDeltaTracking( void);
+Flag SetDirDistanceStepsThenMove( void);
+void HPEventGetEquat( void);
+void HPEventInitMatrix( const int Init);
+void UpdateDriftCalculatedFromGuide( void);
+void RecordEquat( void);
+Flag IACA_Event( void);
+int FindClosestInit( void);
+void SetEndDriftT( void);
+void AddDragToDrift( void);
+void RemoveDragFromDrift( void);
+void CalcCommonDriftVars( void);
+void CheckLX200Events( void);
+void CheckMiscEvents( void);
+void SetAutoAltPECSynchSignal( void);
+void SetAutoAzPECSynchSignal( void);
+void CheckAltPECSynch( void);
+void CheckAzPECSynch( void);
+void ProcessHPEventsGuide( void);
+void ProcessHPEventsFR( void);
+void ProcessHPEventsFocusMethod_Pulse_Dir( void);
+void ProcessHPEventsHandpadAux( void);
+void AuxControlBiDirPPort( void);
+void ProcessHPEventsFocus_OnOff_16_17( void);
+void FocusControl_OnOff_16_17( void);
+void ProcessHPEventsFocus_OnOff_16_17_Slow1_14( void);
+void FocusControl_OnOff_16_17_Slow1_14( void);
+void AddAccumGuideDriftToCurrentPosition( void);
+Flag CheckStartGuideForWriteNSave( void);
+Flag CheckReadyToSaveGuide( void);
+Flag CheckSaveGuideArray( void);
+void ProcessHPEventsMoveMotors( void);
+void ProcessHPEventsModeSwitch( void);
+void ProcessHPEvents( void);
+void WriteAnalysisFile( void);
+
+/* track */
+
+#define MsParmWidthX 11
+#define MsParmPWMWidthX 9
+#define TrackEncodersFile "TRENC.TXT"
+
+typedef enum
+{
+        /* DisplayMsPowerDownSec, */
+        DisplayPWMRepsTick,
+        DisplayMsDelayX,
+        DisplayMsPause,
+        DisplayMs,
+        DisplayMsHsToggleIncrMsPerPWM,
+        DisplayMaxIncrMsPerPWM,
+        DisplayMaxPWM,
+        DisplayPWM
+}DISPLAY_MSPARMS;
+
+DISPLAY_MSPARMS DisplayMsParms;
+
+int ResponseMsParmIx;
+int NewResponseMsParmIx;
+int MsParmIx;
+struct XY MsParmsXY;
+int IncrTrackStep;
+struct AZLong* TE;
+
+void SetMsParmVidMemXY( const int Parm);
+void UpdateResponseMsParm( void);
+void ProcessMsParmsResponse( void);
+void ProcessMsParmChange( void);
+void DisplayMsParmsTitlesAndValues( void);
+void DisplayMsParmsTitles( void);
+void DisplayMsParmValue( const int Parm);
+void TrackByRate( void);
+void TrackEncoder( void);
+
+/* keyboard event... */
+
+// JD on Greenwich Jan 1, 2000, noon
+#define JD2000 2451545.
+
+#define ALTITUDE 0
+#define AZIMUTH 1
+#define MaxNameArray 24
+#define MaxCoord 24
+#define MaxMainStr 14
+#define GuideStartupMarFile "STARTUP.MAR"
+#define ScopeStartupMarFile "SCOPE.MAR"
+#define SlewFile "SLEW.DAT"
+#define SlewOutFile "SLEW_OUT.DAT"
+#define OutGuideFile "OUTGUIDE.DAT"
+#define PMCFile "PMC.DAT"
+#define InputFile "INPUT.DAT"
+#define NotAvailableStr "N/A    "
+#define DataFile "*.dat"
+#define ScrollFile "*.scr"
+#define CometFile "*.cdf"
+#define ElementFile "*.edf"
+#define ReadDataFile 0
+#define ReadCometAsteroidFile 1
+#define ReadCometElements 2
+#define InputCometElements 3
+#define ReadAsteroidElements 4
+#define InputAsteroidElements 5
+#define CalcPlanetCoords 6
+#define PolarAlignFile "POLEALGN.TXT"
+/* # of menu categories to display from left to right in a single row */
+#define MaxMenuCats 9
+/* # of menu subtitles to display in a single row */
+#define MaxMenuSubs 5
+/* # of rows to use to display menu subtitles */
+#define MaxMenuDisplayRows 4
+/* MaxMenuSubs is # of display columns of menu subtitles, so make total # of displayed subtitles
+this number times the max number of display rows */
+#define MaxSubTitles (MaxMenuSubs * MaxMenuDisplayRows)
+/* colors used in graphing analysis, etc */
+#define gridcolor RED
+#define altcolor LIGHTGREEN
+#define azcolor LIGHTBLUE
+#define highlightcolor WHITE
+/* graph scale factor: pixels per degree */
+#define pixelsdeg 1.
+#define Sprintf2Blanks (sprintf( StrBuf, "  "))
+#define SprintfOn (sprintf( StrBuf, "On"))
+#define FilenameSet 1
+#define FilenameNotSet 0
+
+#define DisplayFRCCWBit 1
+#define DisplayFRCWBit  2
+#define DisplayAux1Bit  4
+#define DisplayAux14Bit 8
+#define DisplayAux16Bit 16
+#define DisplayAux17Bit 32
+#define DisplayFocusInBit 64
+#define DisplayFocusOutBit 128
+
+int DisplayBiDirOut;
+int HoldDisplayBiDirOut;
+
+char GuideStartupMarFilePtr[NameSize];
+char ScopeStartupMarFilePtr[NameSize];
+char* HPStr[MaxHandpadFlag];
+
+/* each main menu category has a number of associated menu subtitles;
+when a main menu category is selected, its menu subtitles are displayed */
+
+struct SubTitle
+{
+        char* Title;
+        char* Desc;
+        int MenuItem;
+};
+
+/* main menu categories displayed in a row from left to right */
+struct MenuCat
+{
+        char* Title;
+        int NumSubTitles;
+        struct SubTitle SubTitles[MaxSubTitles];
+};
+
+struct MenuCat MenuArray[MaxMenuCats];
+
+/* starting X values for display of menu categories */
+int MenuCatX[MaxMenuCats];
+/* starting X values for display of menu subtitles; if number of subtitles exceed number of display
+columns, then subtitles displayed in next row, repeating the X values for the columns */
+int MenuSubX[MaxMenuSubs];
+
+struct Frame
+{
+        int Left;
+        int Top;
+        int Right;
+        int Bottom;
+        char* Title;
+};
+
+struct Object
+{
+        char Name[ObjectNameSize];
+        struct HMSH RaHMSH;
+        struct DMS DecDMS;
+        struct HMSH DriftHMSH;
+        struct DMS DriftDMS;
+};
+
+struct Index
+{
+  char Name[ObjectNameSize];
+  long int CurrentOffset;
+};
+
+double EpochDate;
+double PeriDate;
+double PDist;
+double SemiAxis;
+double MeanAn0;
+double Eccen;
+double Peri;
+double Node;
+double Incl;
+double VisMag;
+double Slope;
+double AbsMag;
+double K;
+
+struct FilenameString
+{
+        char Name[FilenameSize];
+        FNAME_TYPE FNameType;
+};
+
+typedef enum
+{
+        ExactInputFieldsMatchOK,
+        AvoidMatchInputFields,
+        DoNotMatchInputFile
+}INIT_MATCH_LIST;
+
+INIT_MATCH_LIST InitMatchList;
+
+/* MenuColor and DefaultBackground */
+int MenuText;
+/* SelectColor and SelectBackground */
+int SelectText;
+/* CurrentColor and DefaultBackground */
+int CurrentText;
+/* DisplayColor and DefaultBackground */
+int DisplayText;
+/* DefaultColor and DefaultBackground */
+int DefaultText;
+/* BorderColor and DefaultBackground */
+int BorderText;
+/* TitleColor and DefaultBackground */
+int TitleText;
+/* currently selected menu category and subtitle in that category */
+int CurrentMenuCat;
+int CurrentMenuSub;
+/* newly selected menu category and subtitle in that category */
+int NewMenuCat;
+int NewMenuSub;
+Flag JumboDisplayFlag;
+Flag FocusFastDisplayFlag;
+/* if move exceeds this, then confirm move */
+long MoveHsMsgSteps;
+/* encoder Alt, Az; encoder Alt, Az offset (Current - encoder = offset) */
+struct AZDouble EncoderAZ, EncoderOffset;
+double EncoderErrorThreshold;
+double TrackEncoderErrorThreshold;
+/* angle that handpad guide buttons use to rotate corrective guiding motions in alt and az */
+double GuideFRAngle;
+double GuideFRAngleOffset;
+int HoldLX200ComPort;
+Flag LX200DisplayFlag;
+Flag ValidResponseFlag;
+Flag GrandTourLoaded;
+Flag GrandTourResetEquatFlag;
+Flag ScrollLoaded;
+Flag RestartScrollFlag;
+Flag HPPolarAlignLoaded;
+Flag CurrentScrollFlag;
+Flag AutoScrollFlag;
+Flag ScrollUnderway;
+Flag AutoScrollAlertFlag;
+Flag DataFileNameSet;
+Flag MsParmsAllowedFlag;
+Flag QuitFlag;
+int SpawnReturn;
+int GrandTourRecNum;
+char FullyQualifiedSlewFile[NameSize];
+char FullyQualifiedSlewOutFile[NameSize];
+char DefaultDir[MAXPATH];
+char DataDir[MAXPATH];
+struct Position SavedIn, SavedIn2, LastDataObject;
+char Filename[NameSize];
+char GrandTourFilename[NameSize];
+char ScrollFilename[NameSize];
+FILE* OutGuideFilePtr;
+/* used to start and end lines in graphing */
+int Abegin, Aend, Adif;
+int Zbegin, Zend, Zdif;
+double errscale;
+/* keeps track of encoder, high priority, and low priority tasks: used to ascertain which task to
+execute next time the function is called */
+int ETask;
+int HTask;
+int LTask;
+Flag KeyboardLeftButton;
+Flag KeyboardRightButton;
+
+char* HotkeyAmp;
+char* HotkeyAt;
+char* HotkeyLeft;
+char* HotkeyRight;
+char* HotkeyQmark;
+char* HotkeyGEMFlip;
+char* HotkeyStar;
+char* HotkeyPercent;
+char* Hotkey1;
+char* Hotkey2;
+char* Hotkey3;
+char* Hotkey4;
+char* Hotkey5;
+char* Hotkey6;
+char* Hotkey7;
+char* Hotkey8;
+char* Hotkey9;
+char* Hotkey0;
+char* Hotkeya;
+char* Hotkeyc;
+char* Hotkeyd;
+char* Hotkeyg;
+char* Hotkeyh;
+char* HotkeyH;
+char* Hotkeyi;
+char* Hotkeyl;
+char* Hotkeym;
+char* Hotkeyn;
+char* Hotkeyo;
+char* Hotkeyp;
+char* Hotkeyq;
+char* Hotkeyr;
+char* Hotkeys;
+char* Hotkeyu;
+char* Hotkeyv;
+
+Flag EncoderThreshold;
+
+/* means array of 5 char pointers to strings */
+char* SlewText[5];
+char* AbortText[10];
+
+/* pts to file positions: allows goback to previous points in file */
+fpos_t* FPosPtr;
+#define MAX_FPOS_PTR 100
+int FPosPtrIx;
+
+typedef enum
+{
+        SlewOff,
+        SlewReady,
+        SlewUnderway,
+        SlewFinished,
+        SlewBeepOn,
+        SlewBeepOff
+} SLEW_BEEP;
+
+SLEW_BEEP SlewBeep;
+int SlewBeepSound;
+
+struct Frame MsgFrame;
+struct Frame CoordFrame;
+struct Frame EPFrame;
+struct Frame DataFileFrame;
+struct Frame InitFrame;
+struct Frame HotkeyFrame;
+struct Frame HandpadFrame;
+struct Frame MainFrame;
+
+char* MainStr_9;
+char* MainStr_10;
+char* MainStr_11;
+char* MainStr_12;
+char* MainStr_13;
+char* MainStr_14;
+char* MainStr_16;
+char* MainStr_17;
+char* MainStr_18;
+char* MainStr_19;
+char* MainStr_20;
+char* MainStr_21;
+char* MainStr_22;
+char* MainStr_23;
+char extern SubVersionStr[81];
+char extern MainFrame_Title[81];
+
+/* following section defines X, Y coordinates... */
+
+/* reused X coordinates */
+const enum
+{
+        MenuStartX = 1, MenuEndX = 79,
+        MenuDescX = 5,
+        DisplayCurrentX = 6, DisplayInputX = 17, DisplayDriftX = 28, DisplayEncoderX = 39,
+        DisplayEncoderCountX = 46, DisplayRefractX = 54, DisplayFRX = 63, DisplayFocusPositionX = 73,
+
+   DisplayAccumGuideX = 40,
+
+        DisplayFileX = 8, DisplayScrollCountsX = 22, DisplayTrackX = 37, DisplayFRMotorTrackX = 51,
+        DisplayInitX = 61, DisplayGEMFlipX = 71,
+
+        DisplayObjectX = 8, DisplayHandpadX = 39, DisplayButtonsX = 69,
+        DisplaySidTX = 17, DisplayMouseModeX = 37, DisplayMsSpeedX = 54, DisplayGuideX = 70,
+        DisplayDateTimeX = 11, DisplayFocusFastX = 41, DisplayFocusSlowX = 61, DisplayFRFocusAuxActionX = 69,
+        DisplayPWMX = 35, DisplayMsStatusX = 45, DisplayQSCX = 68,
+
+        DisplayPECX = 5, DisplayAltAzECX = 35, DisplayAltAltECX = 46, DisplayAzAzECX = 57,
+        DisplayPMCX = 67,
+
+        DisplaySlewX = 7,
+        DisplayLX200X = 7,
+        DisplayLX200X2 = 1
+};
+
+/* reused Y coordinates; top line = 0 */
+const enum
+{
+        MenuCatsY = 1,
+        MenuSubLine1Y = 2,
+        MenuSubMenuY = 3,
+        MenuDescY = 7,
+        MenuSubLine2Y = 8,
+        MenuCoordTitleY = 9,
+        DisplayAltY = 10,
+        DisplayAzY = 11,
+        DisplayFRMotorAngleY = 12,
+        DisplayRaY = 13,
+        DisplayDecY = 14,
+        DisplayLine1Y = 15,
+        DisplayFileY = 16, DisplayScrollCountsY = 16, DisplayTrackY = 16, DisplayInitY = 16,
+        DisplayGEMFlipY = 16,
+
+        DisplayObjectY = 17, DisplayHandpadY = 17, DisplayButtonsY = 17,
+        DisplaySidTY = 18, DisplayMouseModeY = 18, DisplayMsSpeedY = 18, DisplayGuideY = 18,
+        DisplayDateTimeY = 19, DisplayFocusY = 19,
+        DisplayPWMY = 20, DisplayMsStatusY = 20, DisplayQSCY = 20,
+        DisplayPECY = 21, DisplayAltAzECY = 21, DisplayAltAltECY = 21, DisplayAzAzECY = 21,
+        DisplayPMCY = 21,
+
+        DisplaySlewY = 22,
+        DisplayLX200Y = 23,
+        DisplayLX200Y2 = 24
+};
+
+/* named indexes into DisplayXY[] */
+const enum
+{
+        DisplayCurrentAlt, DisplayInputAlt, DisplayDriftAlt, DisplayEncoderAlt, DisplayEncoderCountAlt,
+        DisplayRefract, DisplayFR, DisplayFocusPosition,
+
+        DisplayCurrentAz, DisplayInputAz, DisplayDriftAz, DisplayEncoderAz, DisplayEncoderCountAz,
+        DisplayFRRate,
+
+        DisplayFRMotorAngle,
+
+        DisplayCurrentRa, DisplayInputRa, DisplayDriftRa, DisplayAirMass, DisplayFRMotorPulses,
+        DisplayCurrentDec, DisplayInputDec, DisplayDriftDec, DisplayDomeAzimuth, DisplayFRGuideAngle,
+
+        DisplayTrackByRate, DisplayGEMFlipMove, DisplayAccumGuide,
+
+        DisplayFile, DisplayScrollCounts, DisplayTrack, DisplayFRMotorTrack, DisplayInitStatus,
+        DisplayGEMFlip,
+
+        DisplayObject, DisplayHandpad, DisplayButtons,
+        DisplaySidT, DisplayMouseMode, DisplayMsSpeed, DisplayGuideSpeed,
+        DisplayDateTime, DisplayFocusFast, DisplayFocusSlow, DisplayFRFocusAuxAction,
+        DisplayPWMReps, DisplayMsStatus, DisplayQSC,
+        DisplayPEC, DisplayAltAzEC, DisplayAltAltEC, DisplayAzAzEC, DisplayPMC,
+        DisplayHsSlew, DisplayHsAbort, DisplayHsSteps,
+        DisplayLX200,
+        DisplayLX200_2,
+
+        MaxDisplay
+};
+
+struct XY DisplayXY[MaxDisplay];
+
+int SelectObject;
+int PolarAlignmentStage;
+
+struct STAR
+{
+  float Ra[3];
+  float Dec[3];
+  float SidT[2];
+  char Name[2][23];
+};
+
+struct STAR Star;
+
+/* following are in kbmain.c */
+void InitKBEvent( void);
+void SetAttributes( void);
+void InitDisplayXY( void);
+void BuildHotkeyStrings( void);
+void ProcessHotkeys( void);
+void DisplayHotkeyFile( void);
+void DisplayHotkeyMotor( void);
+void DisplayHotkeyHandpad( void);
+void DisplayHotkeyEC( void);
+void DisplayHotkeyInit( void);
+void DisplayHotkeyCoord( void);
+void DisplayHotkeyMove( void);
+void DisplayHotkeyReset( void);
+void DisplayHotkeyTest( void);
+void CalcHsMsgSteps( void);
+void CloseKBEvent( void);
+void TurnOnMotorsSnd( void);
+void PrelimMsg( void);
+void ClearMenuArea( void);
+void ClearMenuSubArea( void);
+void DrawScreenLine( const int Y);
+void WriteMainMenu( void);
+void WriteMenuCats( void);
+void SelectTextAttrMenuCat( const int MenuCat);
+void DefaultTextAttrMenuCat( const int MenuCat);
+void ChangeTextAttrMenuCat( const int MenuChoice);
+void WriteSubMenus( void);
+void WriteSubMenuDesc( const int MenuCat, const int SubMenu);
+void SelectTextAttrMenuSub( const int MenuSub);
+void MenuTextAttrMenuSub( const int MenuSub);
+void ChangeTextAttrMenuSub( const int MenuChoice);
+void UpdateMenuCatSub( void);
+void DrawBorder( const struct Frame P);
+void WriteWindow( struct Frame P);
+void RemoveWindow( struct Frame P);
+void PressKeyToContMsg( const char* Msg);
+void SetNewMenuCatSub( void);
+void GetNewMenuCatSubFromResponse( void);
+void ProcessKBEvents( void);
+void ProcessVirtualHandpad( void);
+void ProcessMenuResponse( void);
+Flag ConfirmHsMove( void);
+void KBEventMoveHs( void);
+void KBEventInitMatrix( const int Init);
+void DisplayJumboRa( struct Position* P);
+void DisplayJumboDec( struct Position* P);
+Flag SequentialEncoderController( void);
+void SequentialHiPriController( void);
+void SequentialLowPriController( void);
+void SequentialTaskController( void);
+void CheckSlewBeep( void);
+void DisplayQSCvalues( void);
+void CalcGuideFRAngle( void);
+Flag WriteGuideStartup( void);
+void ReadGuideStartup( void);
+void ClosestInit( void);
+void SortPosition( struct Position* A, struct Position* B, const double Diff);
+void BubbleSortPositions( struct Position* Temp);
+
+/* following are in kbdfile.c */
+void GetDir( void);
+void GetFileName( char* Name);
+Flag IsProgramFile( char* Name);
+Flag SelectDataFilename( char* Name);
+void MenuCoordFile( void);
+void MenuCoordFileSubr(const int Loop);
+
+/*void applyCorrectionsFromDataFileCoordYearToEpochNow( struct Position* Pos);
+void applyCorrectionsFromEpochYearToEpochNow( double fromYear, struct Position* Pos);
+void applyCorrectionsFromEpochJDToEpochNow(double fromJD, struct Position* Pos);
+void applyCorrectionsFromEpochJDToEpochJD(double fromJD, double toJD, struct Position* Pos);*/
+void calcCorrectionsForEpochJD(double JD, struct Position* Pos);
+void CalcPrecessionForJD( struct Position* Pos, const double JD);
+void CalcNutationAnnualAberrationForJD( struct Position* Pos, const double JD);
+
+void ObjectNameTextAttr( const struct Frame F, const int Length, const int Select, const int TextAttr);
+void ReadRa( FILE* File, struct HMSH* V);
+void ReadDec( FILE* File, struct DMS* V);
+Flag ObjectNames( struct Index I[], int* Count);
+void SelectCometFromFile( void);
+void ProcessMenuRestoreLastObject( void);
+void LoadInputFileIntoMemory( void);
+Flag ProcessMenuDataFileClosest( Flag FilenameSetFlag, Flag HowToMatchFlag);
+void RemoveBlanks( char* s);
+Flag FindStr( const char* str, char* fname, int* Rec);
+Flag FindFile( const char* Path, const char* Search, char* File, int* Rec);
+Flag ProcessMenuSearch( void);
+void DisplayIn( char* FileName, char* ObjectName);
+void WriteToInputFile( char* ObjectName);
+void ProcessMenuWriteInputComment( void);
+void ResetScrollVars( void);
+void LoadScrollFileFromFile( void);
+void LoadScrollFileFromString( char* Str);
+void LoadScrollFileFromParsedString( void);
+void ReadScrollEquatCoordFromParsedString( struct SCROLL* Scroll);
+void ReadRaFromParsedString( struct HMSH* V);
+void ReadDecFromParsedString( struct DMS* V);
+void BuildScrollNoteFromParsedString( struct SCROLL* Scroll);
+void ParseStringBuildCmd( void);
+void DisplayScrollCountsOnScreen( void);
+void ProcessScroll( void);
+void SetInputToScroll( struct SCROLL* Scroll);
+void RestartScroll( void);
+void ToggleGrandTourRightKey( void);
+void GetGrandTourRec( void);
+void GetGrandTourRecClosestCurrentEquat( void);
+void ProcessGrandTour( void);
+void Move_Update_Handpad_Subr( void);
+void ProcessPolarAlign0( void);
+void ProcessPolarAlign1( void);
+void ProcessPolarAlign2( void);
+void ProcessPolarAlign3( void);
+void ProcessPolarAlign4( void);
+void ProcessPolarAlignCalc( int Mode);
+double ElevationError,AzimuthError;
+void ProcessHPPolarAlign( void);
+
+/* following are in kbencodr.c */
+void SetEncoderAZandEncoderOffset( void);
+void DisplayEncodersNotAvailable( void);
+void CalcEncoderAZ( void);
+void SetEncoderThresholdFlag( void);
+void ProcessBadEncoderThresholdSlew( void);
+void ProcessBadEncoderThresholdTrack( void);
+void WriteEncoderResetLogFileRecord( Flag Axis);
+void ProcessMenuInitEncoders( void);
+void ProcessMenuResetToEncoders( void);
+void DisplayEncoderCounts( void);
+void DisplayEncoderAltaz( void);
+
+/* following are in kbguide.c */
+Flag WriteGuideStartup( void);
+void ReadGuideStartup( void);
+
+/* following are in kbinproc.c */
+void DisplayInitStatusOnScreen( void);
+void DisplayInit( void);
+void EnterInit( const int InitToDo);
+void KillInits( void);
+void Seterrscale( void);
+void PlotAnalysisErrorsOnGrid( const int xoffset, const int yoffset);
+void PlotPMCErrorsOnGrid( const int xoffset, const int yoffset);
+void GraphErrorBars( const int xoffset, const int yoffset);
+void GraphGrid( const int xoffset, const int yoffset);
+void GraphAzLine( const int xoffset, const int yoffset);
+void GraphAltLine( const int xoffset, const int yoffset);
+void GraphAltOnAz( const int xoffset, const int yoffset);
+void GraphAzOnAz( const int xoffset, const int yoffset);
+void GraphAltOnAlt( const int xoffset, const int yoffset);
+void GraphAzOnAlt( const int xoffset, const int yoffset);
+void Graph5( void);
+void ProcessMenuGraphAnalysis( void);
+void ProcessMenuPurgeAnalysis( void);
+void ProcessMenuAnalysisBestZ1Z2Z3( void);
+void ProcessMenuGraphZ1Z2Z3( void);
+void ProcessMenuAltAzEC( void);
+void GraphAltAzEC( const int xoffset, const int yoffset);
+void ProcessMenuAltAltEC( void);
+void GraphAltAltEC( const int xoffset, const int yoffset);
+void ProcessMenuAzAzEC( void);
+void GraphAzAzEC( const int xoffset, const int yoffset);
+void ProcessMenuAnalysisToPMC( void);
+void ProcessMenuAltAzECOnOff( void);
+void ProcessMenuAltAltECOnOff( void);
+void ProcessMenuAzAzECOnOff( void);
+void ProcessMenuPMCOnOff( void);
+void ProcessMenuGraphPMC( void);
+void ProcessMenuSetZ1Z2Z3( void);
+
+/* following are in kbproc.c */
+void WriteFocusPosition( void);
+void WriteHandpadStatus( void);
+void WriteAccumGuide( void);
+void WriteRemoveAccumGuide( void);
+void WriteTrackByRate( void);
+void WriteTrackStatus( void);
+void WriteFRMotorTrackStatus( void);
+void WritePECSynchStatus( void);
+void WriteMsArcsecSec( void);
+void WriteGuideArcsecSec( void);
+void WriteFocusFastSpeed( void);
+void WriteFocusSlowSpeed( void);
+Flag InputAltaz( struct Position* P, int X, int Y);
+Flag InputEquat( struct Position* P, int X, int Y);
+void DisplayDrift( void);
+void DisplayLX200CommandsAndCharBuffer( void);
+void DisplayButtonsStatus( void);
+void DisplayFRFocusAuxActionStatus( void);
+void ProcessUserHotkeys( void);
+void ProcessHotkeys( void);
+Flag EnterHsParms( void);
+void ProcessMenuMoveHs( void);
+void ProcessMenuMoveMs( void);
+void ProcessMenuMoveGEMFlip( void);
+void ProcessMenuMoveGEMFlipCancel( void);
+void ProcessMenuFocusFastSpeed( void);
+void ProcessMenuFocusSlowSpeed( void);
+void ProcessMenuMoveFocus( void);
+void ProcessMenuMoveFocusEP( void);
+void ProcessMenuSaveFocusEP( void);
+void ProcessKBMoveFocus( void);
+void ProcessMenuResetFocus( void);
+void ProcessMenuMoveZeroPEC( void);
+void AddAltOffset( void);
+void ProcessAltOffset( void);
+void ProcessAzOffsetAxisAlign( void);
+void ProcessSav1( void);
+void ProcessRes1( void);
+void ProcessSav2( void);
+void ProcessRes2( void);
+void ProcessMenuDecMotor( void);
+void ProcessMenuReverseAZMotors( void);
+void ProcessMenuReverseFRMotor( void);
+void ProcessMenuReverseFocusMotor( void);
+void ProcessMenuQuit( void);
+void ProcessMenuSite( void);
+void ProcessMenuDosShell( void);
+void ProcessMenuGuide( void);
+void ClearMsgFrameLine( const int Y);
+void ProcessMenuStepsizes( void);
+void ProcessMenuHandpadDesign( void);
+void ProcessMenuHandpad( void);
+void ProcessMenuSelectHandpadMode( void);
+void ProcessMenuHandpadLeft( void);
+void ProcessMenuHandpadRight( void);
+void ProcessMenuHandpadSpeed( void);
+void ProcessMenuHPUpdateDrift( void);
+void ProcessMenuReverseUpDownButtons( void);
+void ProcessMenuTrack( void);
+void ProcessMenuFRMotorTrack( void);
+void ProcessMenuFRStepsize( void);
+void ProcessMenuMsSpeed( void);
+void ProcessMenuGuideSpeed( void);
+void ProcessMenuLX200Control( void);
+void BlankOutLX200DisplayAreas( void);
+void DisplayLX200CommandStatus( void);
+void ProcessMenuTestSerial( void);
+void ProcessMenuTestPPort( void);
+void Start2MotorTrackWithDefaultValues( void);
+void ProcessMenu2MotorTrack( void);
+void ProcessMenuScreen( void);
+void ProcessMenuChangeHsParms( void);
+void ProcessMenuChangeMsParms( void);
+void ProcessMenuAutoMsParms( void);
+void ProcessMenuChangeBacklashParms( void);
+void ProcessMenuAutoGEMFlipOnOff( void);
+void ProcessMenuGuideFRAngle( void);
+void ProcessMenuPECOnOff( void);
+void ProcessMenuPECSynchAlt( void);
+void ProcessMenuPECSynchAz( void);
+void ProcessMenuPECMedianSmooth( void);
+void ProcessMenuInputEquat( void);
+void ProcessMenuInputEquatToAltaz( void);
+void ProcessMenuOffsetEquat( void);
+void ProcessMenuDriftEquat( void);
+void ProcessMenuInputAltaz( void);
+void ProcessMenuOffsetAltaz( void);
+void ProcessMenuDriftAltaz( void);
+void ProcessMenuZeroDrift( void);
+void ProcessMenuResetDrift( void);
+void ProcessMenuResetAccumDrift( void);
+void ProcessMenuMoveEquat( void);
+void ProcessMenuMoveAltaz( void);
+void ProcessMenuMoveHome( void);
+void ProcessMenuResetEquat( void);
+void ProcessMenuResetAltaz( void);
+void ProcessMenuResetHome( void);
+void DisplayGEMFlipStatus( void);
+void ProcessMenuGEMMeridianFlip( void);
+void ProcessMenuFRReset( void);
+void ProcessMenuHomeCoord( void);
+Flag ProcessMenuCheckAnalysis( void);
+void ProcessMenuSelection( void);
+
+/* mouse event */
+
+typedef enum
+{
+        MouseMovedUp,
+        MouseMovedDown,
+        MouseMovedRight,
+        MouseMovedLeft,
+        MouseMovedOff
+}MOUSE_MOVE_RESULT;
+
+MOUSE_MOVE_RESULT MouseMoveResult;
+
+typedef enum
+{
+        MouseModeMenu,
+        MouseModeHs,
+        MouseModeMs,
+        MouseModeFocus,
+        MouseModeAux,
+        MaxMouseMode
+}MOUSE_MODE;
+
+MOUSE_MODE MouseMode;
+
+struct AZInt StartMouseXY;
+
+int MouseLeftTimer;
+int MouseRightTimer;
+Flag SlewStartedFromMouse;
+Flag MouseModeAuxPinActive;
+
+void InitMouseControl( void);
+void CloseMouseControl( void);
+Flag ProcessMouseEvent( void);
+Flag ProcessMouseEventMenu( void);
+void ProcessMouseModeHsMs( void);
+void ProcessMouseModeAux( void);
+Flag ProcessMouseModeFocusByMethod( void);
+void ProcessMouseFocus_OnOff_16_17( void);
+void ProcessMouseFocus_OnOff_16_17_Slow1_14( void);
+void WriteMouseMode( void);
+
+/* main, or scope.c */
+
+Flag CalledByGuideFlag, KeepGoingFlag, ReadSlewFlag;
+Flag StartScrollFlag;
+
+void InputEquatSlewDat( void);
+void WriteEquatSlewOutFile( void);
+void WriteAltazSlewOutFile( void);
+void WriteLogFile( void);
+void BadExit( const char* Msg);
+
+/* following in PlanetCoords(), etc. */
+#define SinObliq 0.39777716
+#define CosObliq 0.91748206
+
+struct Poisson
+{
+  double TZero, dT;
+  int BlockCount, TotalFreqs;
+  double Secular[12], *Frequencies, *Terms;
+  int nf[3];
+};
+
+struct PoissonHeader
+{
+  double TZero, dT;
+  short nf[3], BlockCount, TotalFreqs;
+};
+
+int FileType;
+double Epoch;
+double TimeInstant;
+double dJ;
+int Planet;
+double X,Y,Z;         /* Sun Rectangular Coords  */
+double x,y,z;         /* Planet Rectangular Coords   */
+double A,B,C,a,b,c;   /* Comet and Asteroid Intermediate Terms  */
+double Distance;
+double dX,dY,dZ;      /* Hourly planet movement  */
+float DriftDeltaT;
+Flag ManualInputFlag;
+Flag DriftFlag;
+
+int Unpack( double *ovals, const char *ibuff);
+void SelectMinorPlanet( void);
+void PlanetCoords( void);
+void * ReadPSTerms( int x);
+void CalcEpoch( int Y, int M, float D);
+void CalcPSRectCoords( void *PPtr);
+void CalcDistance( void);
+void InputOrbitalElements( void);
+Flag ElementDisplay( Flag Update, int Offset, char Phrase[], int* IElement, double* DElement);
+void CalcBodyRectCoords( void);
+void CalcTopocentricCoords( void);
+void CalcAuxiliaryTerms( void);
+double Kepler( double MeanAn);
+double Parabola( void);
+void ReadOrbitalElements( long int StartOfRecord);
+void HighlightAndSelect( struct Frame *frameptr, int Spacing, int LineCount);
+struct Position CometDrift;
+void AddCometDriftToDrift( void);
+void RemoveCometDriftFromDrift( void);
+void ReadRaDec( FILE* File);
+void DisplayMag( struct Index[], int Ix);
+void UpdateJD( void);
+#endif

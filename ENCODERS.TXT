@@ -1,0 +1,2 @@
+Encoder reset: Alt -10.239258 deg; Track? n; Time 11:15:15
+Encoder reset: Alt -2.065430 deg; Track? n; Time 11:15:18

@@ -1,0 +1,226 @@
+;created on Sat Feb 21 10:59:25 2004
+
+[*** display section ***]
+DefaultBackground 0
+DefaultColor 7
+TitleColor 9
+BorderColor 1
+MenuColor 12
+DisplayColor 12
+SelectColor 0
+CurrentColor 14
+SelectBackground 4
+ConfirmQuit 0
+DisplayOpeningMsgs 1
+MoveHsMsgDeg 10.000000
+
+[*** hotkey section ***]
+
+[*** interface section ***]
+InterfacePath C:\GUIDE8\
+
+[*** control section ***]
+UseMouseFlag 0
+IACA_Flag 0
+
+[*** mount section ***]
+GEMFlipPossible 1
+AutoGEMFlip 0
+AutoGEMFlipFuzzDeg 7.500000
+Siderostat 0
+HomeAltDeg 0.000000
+HomeAzDeg 0.000000
+MsArcsecSec 300
+
+[*** error correction section ***]
+RefractFlag 1
+UseAltAzECFlag 0
+UseAltAltECFlag 0
+UseAzAzECFlag 0
+PointingModelFlag 0
+
+[*** Handpad section ***]
+HandpadPresentFlag 1
+StartingHandpadMode 0
+HandpadDesign 0
+UpDownButtonsReversedFlag 0
+HandpadFlipUpDownWithGEMFlip 0
+
+[*** backlash section ***]
+AltBacklashArcmin 0.000000
+AzBacklashArcmin 0.000000
+ABacklashSignalPPortPin17 0
+
+[*** limit move section ***]
+AltLowLimitDeg 0.000000
+AltHighLimitDeg 0.000000
+AzLowLimitDeg 0.000000
+AzHighLimitDeg 0.000000
+
+[*** guide section ***]
+GuideArcsecSec 5
+GuideDragAltArcsecPerMin 0.000000
+GuideDragAzArcsecPerMin 0.000000
+GuideDragRaArcsecPerMin 0.000000
+GuideDragDecArcsecPerMin 0.000000
+HPUpdateDriftFlag 1
+
+[*** drift section ***]
+DriftAltArcsecPerMin 0.000000
+DriftAzArcsecPerMin 0.000000
+DriftRaDegPerHr 0.000000
+DriftDecDegPerHr 0.000000
+
+[*** PEC section ***]
+PECFlag 0
+AutoAltPECPin 17
+AutoAltPECSyncOnFlag 0
+AutoAltPECSyncLowHighFlag 1
+AutoAltPECSyncDirFlag 0
+AutoAltPECDeBounce 0
+AutoAzPECPin 15
+AutoAzPECSyncOnFlag 0
+AutoAzPECSyncLowHighFlag 1
+AutoAzPECSyncDirFlag 0
+FullstepsPerPECArray 200
+PECIxOffset.A 81
+PECIxOffset.Z 96
+
+[*** field rotation section ***]
+FRStepSizeArcsec 5.000000
+SectoredFRDrive 1
+FRStepSpeedMilliSec 20
+ReverseFRMotor 0
+
+[*** focus section ***]
+FocusMethod 3
+ReverseFocusMotor 0
+FocusFastStepsSec 2
+FocusSlowStepsSec 1
+FocusPosition 0
+
+[*** motor setup section ***]
+MotorControlMethod 0
+MotorWindings 4
+InvertOutput 0
+KeepAlivePPortPin 0
+AltFullStepSizeArcsec 2.750000
+AzFullStepSizeArcsec 2.710000
+ReverseAMotor 0
+ReverseZMotor 0
+
+[*** halfstep section ***]
+HsRampStyle 1
+HsTimerFlag 1
+MaxDelay 1000
+MinDelay 500
+HsDelayX 2
+HsRampX 6
+InterruptHs 100
+HoldReps 20
+HsOverVoltageControl 0
+MaxConsecutiveSlews 5
+
+[*** microstep section ***]
+MsPowerDownSec 5
+PWMRepsTick 22
+AvgPWMRepsTickOnFlag 1
+MsDelayX 6
+MsPause 500
+Ms 20
+MaxIncrMsPerPWM 5
+MsHsToggleIncrMsPerPWM 5
+MaxPWM 100
+PWM[0] 100 : 0
+PWM[1] 100 : 27
+PWM[2] 100 : 37
+PWM[3] 100 : 46
+PWM[4] 100 : 54
+PWM[5] 100 : 62
+PWM[6] 100 : 69
+PWM[7] 100 : 77
+PWM[8] 100 : 86
+PWM[9] 100 : 94
+PWM[10] 100 : 100
+PWM[11] 94 : 100
+PWM[12] 86 : 100
+PWM[13] 77 : 100
+PWM[14] 69 : 100
+PWM[15] 62 : 100
+PWM[16] 54 : 100
+PWM[17] 46 : 100
+PWM[18] 37 : 100
+PWM[19] 27 : 100
+
+[*** parallel port section ***]
+PPortAddr 1
+
+[*** serial port section ***]
+'COM1 hardcoded to base address of 1016 (0x3F8) with IRQ4
+'COM2 hardcoded to base address of  760 (0x2F8) with IRQ3
+COM3Base 1000
+COM3IRQ 4
+COM4Base 744
+COM4IRQ 3
+
+[*** encoder section ***]
+EncoderString NoEncoders
+;EncoderString Bseg
+;EncoderString ResetViaR
+;EncoderString ResetViaZ
+;EncoderString NoReset
+;EncoderString Mouse
+;EncoderString Ek
+;EncoderString SkyCommander
+;EncoderString ResetViaR
+EncoderComPort 0
+EncoderBaudRate 9600
+SerialWriteDelayMs 50
+AltEncoderCountsPerRev 8192
+AzEncoderCountsPerRev 8192
+AltEncoderDir 1
+AzEncoderDir 0
+EncoderErrorThresholdDeg 0.100000
+TrackEncoderErrorThresholdDeg 1.000000
+MakeEncoderResetLogFile 1
+EncoderOffset.A 0.698137
+EncoderOffset.Z 1.224569
+
+[*** LX200 protocol input section ***]
+LX200ComPort 0
+LX200BaudRate 9600
+LX200MotionTimeoutSec 5
+LX200SlewHs 2000
+LX200_LongFormat 0
+
+[*** coordinate conversion section ***]
+Current.Alt 57.490278
+Current.Az 259.083528
+AccumMs.A 1505200
+AccumMs.Z 6883400
+StartInitState 0
+InitOne 0.000000 90.000000 80.000000 0.000000 300.671229 
+InitTwo 300.671229 0.000000 10.000000 180.000000 300.671229 
+Z1Deg 0.000000
+Z2Deg 0.000000
+Z3Deg 0.000000
+DataFileCoordYear 2000.000000
+
+[*** astronomical times section ***]
+LatitudeDeg 80.000000
+CMOS_RTC_Access 0
+LongitudeDeg 120.000000
+Tz 8.000000
+DST 0
+
+[*** Eyepieces section (maximum of 3 Eyepieces) ***]
+Eyepieces 2
+EPFocusPosition[0].Position 100 
+EPFocusPosition[0].Name EyePiece20mm
+EPFocusPosition[1].Position 200 
+EPFocusPosition[1].Name EyePiece9mm
+
+[*** test section ***]
+;TestString NoTest
+;TestString PreloadGuidexx.dat
+TestString NoTest

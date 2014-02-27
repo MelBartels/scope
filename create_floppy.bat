@@ -1,0 +1,1 @@
+copy c:\mel\cot\floppy\*.* a:

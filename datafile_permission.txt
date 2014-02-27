@@ -1,0 +1,106 @@
+
+
+Subj: Re: Reformatted Data From NGC2000.0 Diskette S0023
+Date: 7/18/01 1:56:43 PM Eastern Daylight Time
+From:    smacgillivray@skypub.com (Sally MacGillivray)
+To:    Mimas@aol.com
+
+
+
+Dear Don Ware:
+
+I'm getting back to you concerning your request to reprint the data from
+Roger W. Sinnott's NGC 2000.0 on the website of Mel Bartels, in connection
+with the project for building a driver for a Dobsonian telescope.  
+
+We have no objection to your reprinting the data as long as you carry a
+credit line: 
+
+NCC and IC data are taken from NGC 2000.0, edited by Roger W. Sinnott.
+Copyright (c) 1988 by Sky Publishing Corp.  Reproduced with the permission
+of the publisher. 
+
+While it's true that the NGC data is available on public websites, Roger
+Sinott's work correcting it (and Sky's publishing of it) makes that version
+the property of Sky Publishing, so you were right to request permission to
+reprint it.
+
+Best wishes
+
+Sally MacGillivray
+Rights and Permissions ManagerAt 04:32 PM 7/10/01 EDT, you wrote: 
+>>>>
+In a message dated 7/10/01 1:59:17 PM Eastern Daylight Time,  
+smacgillivray@skypub.com writes: 
+
+
+Thanks for being in touch.  I'm not familiar with Mel Bartel's program. 
+Can you enlighten me a bit more?   
+
+Check the article Mel wrote for "Sky and Telescope," April 2000 pp128-133.   
+Also see the URL for his website listed on p132. 
+
+
+I don't know whether Mr. Bartel obtained 
+permission from Sky to "excerpt" (if that's what he did) material from NGC 
+2000.0 and reformat it.  
+
+On Mel's website, he acknowledges sources for the databases he now
+provides.   
+The NGC database he provides was clearly NOT extracted from NGC2000.0 and  
+only  lists some of the NGC objects and none of the IC objects.  I provided  
+the Flamsteed database as acknowledged by him, (Follow the 'Contributors'  
+link).  That data was obtained from public websites. 
+  
+I will look into this, but  meantime, if you would 
+give me a bit more information about what you plan to do, and the 
+background, I'd appreciate it.  
+
+
+As I mentioned in my original e-mail, I took the data on NGC2000.0 and  
+extracted it with a simple Basic program using the examples provided on the  
+diskette.  I then reformated it using a Lotus 123 worksheet to put it into  
+the format used by Mel's program. The result are files NGC0 - NGC7 covering  
+objects NGC0001 through NGC7840 and IC0 - IC5 covering object IC0001
+throught  
+IC5386. 
+
+It should be noted that most if not all the data on NGC2000.0 is available
+on  
+public websites.  The contribution of Roger Sinnott was to compile it all  
+into one place and make corrections where necessary.  Rather then repeat his  
+efforts, I used the NGC2000.0 diskette, so am asking permission to provide  
+the information from it on Mel's website acknowleding the source 
+
+Regards, 
+
+Don Ware 
+
+
+
+
+     
+     
+     
+
+
+
+
+
+
+----------------------- Headers --------------------------------
+Return-Path: <smacgillivray@skypub.com>
+Received: from  rly-xa04.mx.aol.com (rly-xa04.mail.aol.com [172.20.105.73]) by air-xa03.mail.aol.com (v79.27) with ESMTP id MAILINXA31-0718135643; Wed, 18 Jul 2001 13:56:43 -0400
+Received: from  andromeda.skypub.com (andromeda.skypub.com [205.184.73.3]) by rly-xa04.mx.aol.com (v79.20) with ESMTP id MAILRELAYINXA43-0718135615; Wed, 18 Jul 2001 13:56:15 -0400
+Received: from sm ([205.184.73.51])
+    by andromeda.skypub.com (8.9.1/8.9.1) with SMTP id NAA22358
+    for <Mimas@aol.com>; Wed, 18 Jul 2001 13:56:16 -0400 (EDT)
+Message-Id: <3.0.32.20010718135558.00688f78@andromeda.skypub.com>
+X-Sender: smacgillivray@andromeda.skypub.com
+X-Mailer: Windows Eudora Pro Version 3.0 (32)
+Date: Wed, 18 Jul 2001 13:55:58 -0400
+To: Mimas@aol.com
+From: Sally MacGillivray <smacgillivray@skypub.com>
+Subject: Re: Reformatted Data From NGC2000.0 Diskette S0023
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
