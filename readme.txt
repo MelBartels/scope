@@ -1,15 +1,21 @@
-copyright 1990 through 2003 by Mel Bartels
+Scope.exe was a popular telescope control program written for DOS. It combined a microstepping motor control design in software along with altazimuth telescope pointing coordinate translations and object data files. Advanced error pointing routines and scripting was subsequently added. At its peak there were about a thousand users and installations worldwide.
 
-Scope.exe is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+Licensed as GPL.
 
-Scope.exe is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+In 1980 I met John Dobson, was allowed to use his 24 inch for the night, and immediately began scheming to build my own 24 inch. I built an equatorial table for the 24 inch but decided the complications exceeded the benefits for such a large heavy scope. I went with A-frame tube assembly on a ball bearing with Teflon brakes mount. The telescope was trailered and I used it often, dragging it to dark skies close to twice a week. See http://www.bbastrodesigns.com/24inch.html. I never stopped dreaming of adding motorized tracking though.
 
-You should have received a copy of the GNU General Public License
-along with scope.exe; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+For a few years, I consoled myself by experimenting with pocket calculators to translate equatorial coordinates into altazimuth coordinates, using protractor like setting circles on my telescopes. I achieved quarter of a degree pointing accuracy. I could star hop or point the scope after entering numbers on the pocket calculator. I found stars and planets in the daytime and comets in bright twilight. But still, I did not have tracking. I experimenting with DC voltage control of PM motors but found the constant re-synchronizing of the drive rate at the eyepiece not worth the trouble.
+
+In 1982 the Commodore 64 computer arrived. I got in line and bought one with a tape drive during the Christmas rush. A friend was already exploring a Commodore PET. I began experimenting with computer control of stepper motors. The results were abysmal: the lack of computing speed greatly limited the dynamic range of the motors, meaning that I could either track or goto, but not both. I also experimented with voice control with the COVOX unit. This worked well, after I trained my voice to work with the recognition algorithm, in quiet environments. At public star parties, there was too much background noise which would cause the telescope to move in wacky ways.
+
+In the mid-1980’s I learned 6510 assembly code and found that I could microstep the stepper motors and achieve modest dynamic range with slewing topping out at a quarter degree per second using the Commodore 64. Getting closer!  I was greatly inspired by Trueblood and Genet's Microcomputer Control of Telescopes (1985) and Meeus' Astronomical Formulae for Calculators (1979) and dreamed of a single motor per axis that would handle tracking and slewing.
+
+My breakthrough came with the introduction of the 286/386 computer. Now I had enough processor speed and memory to simultaneously handle an object library, the coordinate translation, and microstepping stepper motors for smooth tracking and halfstepping the stepper motors for higher speed slewing. The PC would become the embedded processor. I designed the simplest possible circuit board, really a power amplifier that simply turned current on and off to the stepper windings. I came up with the idea of pre-building arrays in software that contained the microstepping logical highs and lows for eight stepper motor windings. Since each motor had four windings, I could control two motors simultaneously by writing out the arrays in the correct sequence at the proper timing intervals to the parallel port. I wrote code to reprogram the timer chip and wrote interrupt service routines to gain close to microsecond timing control. That meant that I could generate microsteps in software instead of using digital ICs in the circuitry. I added Toshimi Taki’s matrix based coordinate translation routine. The result was scope.exe, written in C, a remarkably easy to use and highly accurate tracking and goto piece of software.
+
+I used my scope at the 1994 Oregon Star Party and later traveled to RTMC in 1995 with my 20 inch computerized scope, receiving a Merit Award. Richard Berry and I experimented with attaching his Cookbook 245 camera to my scope and achieved promising results at the same time. A little more than a dozen years after that night at Crater Lake with John Dobson, I had achieved my tracking and goto dreams.
+
+CompuServe AstroForum members began expressing interest. I offered the software and circuitry as open source freeware in response. I had developed the system for my mission: it never occured to me that others would want to build it too. The circuitry proved simple to wire up and the software easy to operate in the field.
+
+Another key to success was that as the years wore on, people contributed software with the result that scope.exe became more than I could ever achieve by myself. Don Ware (a heavy contributor), Renato Bonomini, Chris Rowland, Dave Sopchak, Egon Lenc, Charlie Habekost, Ken Gray, Larry Bell, Ben Davies and others contributed code and algorithms plus I worked closely with David Lane (Earth Centered Universe), David Ek (encoders) and Bill Gray (Project Pluto’s Guide) among others.
+
+Mel Bartels
